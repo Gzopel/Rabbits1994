@@ -1,0 +1,19 @@
+{
+  "name": "pix",
+  "version": "1.0.0",
+  "description": "pix test",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buid": "browserify index.js -o bundle.js"
+  },
+  "author": "gzopel",
+  "license": "ISC",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/Gzopel/pixiepix.git"
+  },
+
+  "dependencies": {
+    "pixi": "^0.2.1"
+  }
+}
