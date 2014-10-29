@@ -1,21 +1,22 @@
-var PIXI  = require('pixi');
-var Game = require('./game').Game;
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var game = require('./game/game');
+var cookieParser = require('cookie-parser');
+var errorHandler = require('errorhandler');
+//var session = require('express-session')
 
 
-var w=window.innerWidth*0.98;
-var h=window.innerHeight*0.98;
+app.use(express.static('./public'));
+app.use(cookieParser('En mi pueblo le decimo macita'));
+//app.use(session({ store: sessionStore }));
+app.use(errorHandler());
 
-var renderer = PIXI.autoDetectRenderer(w,h);
 
-document.body.appendChild(renderer.view);
 
-var game = new Game(w,h);
+game.attach(io);
 
-var animate = function () {
-    game.tick();
-    renderer.render(game);
-    requestAnimationFrame(animate);
-};
-
-requestAnimationFrame(animate);
-
+http.listen(3000, function(){
+    console.log('listening on *:3000');
+});
