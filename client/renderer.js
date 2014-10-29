@@ -43,7 +43,7 @@ module.exports ={
     attach :function(socket) {
         socket.on('piece update', function (msg) {
             player.position.x = msg.to.x;
-            player.position.y = msg.to.y;
+            player.position.y = h - msg.to.y; // eje y invertido
         });
     },
     start: function() {

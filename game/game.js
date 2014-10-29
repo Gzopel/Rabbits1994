@@ -80,6 +80,13 @@ Game.prototype.move = function(movement){
 
             var collisions = this.board.collisionWalk(piece.point,destination,piece.hitRadius);
 
+            if(!collisions) {
+                this.board.movePiece(piece,{x:this.board.width/2,y:this.board.height/2});
+                console.log('piece update');
+                IO.sockets.emit('piece update', {type:'revive', pieceId:piece.id, to:piece.point});
+                return;//hack!
+            }
+
             if (collisions.pieces.length || collisions.cells.length) {
                 console.log('collision');
                 IO.sockets.emit('piece update', {type:'collision', pieceId:piece.id,cells: collisions.cells});

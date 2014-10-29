@@ -4,7 +4,7 @@ var socket = null;
 
 var ticks = 0;
 var lastAttack = 0;
-var moveLimit = 20;
+var moveLimit = 2;
 var attackLimit = 20;
 var controls = {
     up : false,
@@ -78,7 +78,7 @@ var Controller = module.exports.Controller = function(socket){
         movementUpdate();
     });
     kd['LEFT'].up(function () {
-        controls.LEFT=false;
+        controls.left=false;
     });
     kd['RIGHT'].down(function () {
         controls.right=true;
@@ -173,7 +173,7 @@ module.exports ={
     attach :function(socket) {
         socket.on('piece update', function (msg) {
             player.position.x = msg.to.x;
-            player.position.y = msg.to.y;
+            player.position.y = h - msg.to.y; // eje y invertido
         });
     },
     start: function() {

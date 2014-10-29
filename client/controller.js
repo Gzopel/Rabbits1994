@@ -3,7 +3,7 @@ var socket = null;
 
 var ticks = 0;
 var lastAttack = 0;
-var moveLimit = 20;
+var moveLimit = 4;
 var attackLimit = 20;
 var controls = {
     up : false,
@@ -77,7 +77,7 @@ var Controller = module.exports.Controller = function(socket){
         movementUpdate();
     });
     kd['LEFT'].up(function () {
-        controls.LEFT=false;
+        controls.left=false;
     });
     kd['RIGHT'].down(function () {
         controls.right=true;

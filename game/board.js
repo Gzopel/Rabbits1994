@@ -80,23 +80,6 @@ function distToSegmentSquared(p, v, w) {
 
 function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
 
-Board.prototype.makeJson = function(){
-    var xIndex;
-    var yIndex;
-    var tiles = new Array(this.xMax * this.yMax );
-    for (xIndex = 0; xIndex < this.xMax; xIndex++ ) {
-        for (yIndex = 0; yIndex < this.yMax; yIndex++ ) {
-            var cell = this.board[xIndex][yIndex];
-            tiles.push({
-                type:cell.walkable?'ground':'wall',
-                x:cell.x*this.xScale,
-                y:cell.y*this.yScale
-            });
-        }
-    }
-    return JSON.stringify(tiles);
-};
-
 Board.prototype.collisionWalk = function(point1,point2,hitRadius){
     var c1 = this.convertToCellCoordinate(point1);
     var c2 = this.convertToCellCoordinate(point2);
@@ -112,6 +95,10 @@ Board.prototype.collisionWalk = function(point1,point2,hitRadius){
     };
     var collidingDistance;
     //simple
+    if (!c2 ||!this.board[c2.x] || !this.board[c2.x][c2.y]){
+        console.log('debug this!');
+        return null;
+    }
     var targetCell = this.board[c2.x][c2.y];
     if(!targetCell.walkable){
         colliding.cells.push(targetCell);
