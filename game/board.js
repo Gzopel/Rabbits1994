@@ -33,7 +33,7 @@ var Board = module.exports.Board = function (config) {
     for (xIndex = 0; xIndex < this.xMax; xIndex++ ) {
         this.board[xIndex] = new Array(this.yMax);
         for (yIndex = 0; yIndex < this.yMax; yIndex++ ) {
-            var w = ((xIndex>0)&&(yIndex>0)&&(xIndex <this.xMax)&& (yIndex<this.yMax-1));
+            var w = ((xIndex>0)&&(yIndex>0)&&(xIndex <(this.xMax-1))&& (yIndex<this.yMax-1));
             this.board[xIndex][yIndex] = new Cell(xIndex,yIndex,w);
         }
     }

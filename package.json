@@ -18,8 +18,11 @@
     "errorhandler": "^1.2.2",
     "express": "^4.10.0",
     "express-session": "^1.9.1",
+    "jquery": "^2.1.1",
+    "jsonwebtoken": "^1.1.2",
     "pixi": "^0.2.1",
     "socket.io": "^1.1.0",
-    "socket.io-client": "^1.1.0"
+    "socket.io-client": "^1.1.0",
+    "socketio-jwt": "^2.3.5"
   }
 }

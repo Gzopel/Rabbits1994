@@ -16,13 +16,13 @@ var lastMovement = 0;
 
 
 
-var Controller = module.exports.Controller = function(socket){
+var Controller = module.exports.Controller = function(socket,id){
 
     var buildMsg = function(){
         var msg = {
             action: 'move',
             movement:{
-                owner:1,
+                owner:id,
                 orientation:0
             }
         };

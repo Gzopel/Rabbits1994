@@ -111,7 +111,11 @@ Game.prototype.addPlayer = function(player){
     this.pieces.push(playerPiece);
 
     //notify all should be .sockets.in(gameID).emit
-    IO.sockets.emit('players update', {action:'add',target:player,all:this.players});
+    var allPlayers = [];
+    this.pieces.forEach(function(piece) {
+        allPlayers.push({id:piece.id,point:piece.point});
+    });
+    IO.sockets.emit('players update', {action:'add',target:player,position:playerPiece.point,all:allPlayers});
 };
 
 Game.prototype.removePlayer = function(id){
@@ -121,25 +125,27 @@ Game.prototype.removePlayer = function(id){
             this.players.splice(i,1);
         }
     }
-    IO.sockets.emit('players update', {action:'remove',target:id,all:this.players});
-};
-
-
-var disconnect = function(msg){
-    game.removePlayer(msg.id);
-};
-
-var join = function(msg){
-    var player = msg.player;
-    game.addPlayer(player);
+    for ( i=0;i<this.pieces.length;i++){
+        if(this.pieces[i].id===id){
+            this.pieces.splice(i,1);
+        }
+    }
+    IO.sockets.emit('players update', {action:'remove',target:id});
 };
 
 module.exports.attach = function(io){
     IO = io;
     game = new Game(config);
     io.sockets.on('connection', function (socket) {
-        socket.on('join', join);
-        socket.on('disconnect', disconnect);
+        socket.on('join', function(msg){
+            socket.client.playerId = msg.player.id;
+            game.addPlayer( msg.player);
+        });
+        socket.on('disconnect',  function(msg){
+            if(socket.client.playerId){
+                game.removePlayer(socket.client.playerId);
+            }
+        });
         socket.on('player action', function(msg){
             console.log(msg);
             if(msg.action === 'move'){
