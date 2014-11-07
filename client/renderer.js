@@ -27,19 +27,21 @@ for (i = 0; i<10; i++ ) {
 }
 //create players
 var playerTexture = PIXI.Texture.fromImage('resources/bunny.png');
+var hitTexture = PIXI.Texture.fromImage('resources/hit.png');
 var players = [];
-/*var player = new PIXI.Sprite(playerTexture);
-player.width=20;
-player.height=30;
-player.id=0;
-player.visible=false;
-players[0]=player;*/
+
 //create stage
 var stage = new PIXI.Stage();
 stage.addChild(map);
 
 var animate = function () {
    // game.tick();
+    players.forEach(function(player){
+        if(player.gotHit){
+
+            //animate player
+        }
+    });
     renderer.render(stage);
     requestAnimationFrame(animate);
 };
@@ -48,25 +50,38 @@ module.exports ={
     attach :function(socket,id) {
         myId = id;
         socket.on('piece update', function (msg) {
-            console.log('move',msg);
+            console.log('piece update',msg);
             if (msg.type ==='walk' && players[msg.pieceId]){
                 var p = players[msg.pieceId];
                 p.position.x = msg.to.x-p.width/2;
-                p.position.y = (h - msg.to.y ) -p.height/2; // eje y invertido
+                p.position.y = (h - msg.to.y ) -30; // eje y invertido
+            } else if (msg.type ==='hit'){
+                var player = players[msg.pieceId];
+                var hit =  new PIXI.Sprite(hitTexture);
+                hit.scale.x=2;
+                hit.scale.y=2;
+                hit.position.x=player.position.x;
+                hit.position.y=player.position.y+10;
+                stage.addChild(hit);
+                setTimeout(function(){
+                    hit.visible=false;
+                    stage.removeChild(hit);
+                    delete hit;
+                },250);
             }
         });
 
         socket.on('players update', function (msg) {
-            console.log('add',msg);
+            console.log('player update',msg);
             if (msg.action === 'add'){
                 msg.all.forEach( function(player){
                     if (!players[player.id]){
                         players[player.id] = new PIXI.Sprite(playerTexture);
-                        players[player.id].width=20;
-                        players[player.id].height=30;
+                        players[player.id].width=26;
+                        players[player.id].height=37;
                         players[player.id].visible=true;
-                        players[player.id].position.x = player.point.x-20;
-                        players[player.id].position.y = (h - player.point.y ) -15; // eje y invertido
+                        players[player.id].position.x = player.point.x-13;
+                        players[player.id].position.y = (h - player.point.y ) -30; // eje y invertido
                         players[player.id].id=player.id;
                         stage.addChild(players[player.id]);
                     }
@@ -74,7 +89,7 @@ module.exports ={
             } else if (msg.action === 'remove'){
                 if (players[msg.target]){
                     stage.removeChild(players[msg.target]);
-                    players.splice(msg.target,1);
+                    delete players[msg.target];
                 }
             }
         });

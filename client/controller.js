@@ -88,16 +88,24 @@ var Controller = module.exports.Controller = function(socket,id){
     });
 
     kd['Q'].down(function () {
-        console.log('attack');
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
-            socket.emit(msg_type, {action: 'attack'});
+            socket.emit(msg_type, {action: 'attack',owner:id});
         }
     });
-    //kd['W'].down(function () {
-    //});
-    //kd['E'].down(function () {
-    //});
+    kd['W'].down(function () {
+        if ((ticks-lastAttack) > attackLimit ) {
+            lastAttack = ticks;
+            socket.emit(msg_type, {action: 'shoot',owner:id});
+        }
+    });
+    kd['E'].down(function () {
+        console.log('block');
+        if ((ticks-lastAttack) > attackLimit ) {
+            lastAttack = ticks;
+            socket.emit(msg_type, {action: 'block',owner:id});
+        }
+    });
     //kd['R'].down(function () {
     //});
 

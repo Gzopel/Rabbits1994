@@ -1,5 +1,6 @@
 var Board = require('./board').Board;
 var Piece = require('./board').Piece;
+var Shot = require('./board').Shot;
 var IO = null;
 var game = null;
 
@@ -78,7 +79,7 @@ Game.prototype.move = function(movement){
                 destination.x-= piece.sideStep;
             }
 
-            var collisions = this.board.collisionWalk(piece.point,destination,piece.hitRadius);
+            var collisions = this.board.collisionWalk(piece,destination,piece.hitRadius);
 
             if(!collisions) {
                 this.board.movePiece(piece,{x:this.board.width/2,y:this.board.height/2});
@@ -100,15 +101,15 @@ Game.prototype.move = function(movement){
     }
 };
 Game.prototype.addPlayer = function(player){
-    this.players.push(player);
     var playerPiece = new Piece({});
 
     //set up starting position
     playerPiece.point = {x:150,y:150};
     playerPiece.id = player.id;
+    this.players.push(playerPiece);
+    this.pieces.push(playerPiece);
 
     this.board.putPieceAtCoordinate(playerPiece,playerPiece.point);
-    this.pieces.push(playerPiece);
 
     //notify all should be .sockets.in(gameID).emit
     var allPlayers = [];
@@ -116,6 +117,22 @@ Game.prototype.addPlayer = function(player){
         allPlayers.push({id:piece.id,point:piece.point});
     });
     IO.sockets.emit('players update', {action:'add',target:player,position:playerPiece.point,all:allPlayers});
+};
+
+Game.prototype.shot = function (shot){
+    var shooter = game.getPlayerById(shot.owner);
+    var shot = new Shot();
+    shot.owner = shooter.id;
+};
+Game.prototype.attack = function (attack){
+    var attacker = this.getPlayerById(attack.owner);
+    for ( var i=0;i<this.pieces.length;i++){
+        if(this.pieces[i].id!==attacker.id){
+            if (attacker.distanceToPiece(this.pieces[i])<10) {
+                IO.sockets.emit('piece update', {type:'hit', pieceId:this.pieces[i].id, by:attacker.id});
+            }
+        }
+    }
 };
 
 Game.prototype.removePlayer = function(id){
@@ -127,6 +144,7 @@ Game.prototype.removePlayer = function(id){
     }
     for ( i=0;i<this.pieces.length;i++){
         if(this.pieces[i].id===id){
+            this.board.removePiece(this.pieces[i]);
             this.pieces.splice(i,1);
         }
     }
@@ -150,6 +168,10 @@ module.exports.attach = function(io){
             console.log(msg);
             if(msg.action === 'move'){
                 game.move(msg.movement);
+            } else if (msg.action === 'shoot'){
+             //   game.shot(msg);
+            } else if(msg.action === 'attack'){
+               game.attack(msg);
             }
         });
 

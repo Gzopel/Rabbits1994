@@ -1,4 +1,3 @@
-
 var Cell = function (x,y,walkable) {
     this.x=x;
     this.y=y;
@@ -10,12 +9,25 @@ Cell.prototype = Object.create(Object.prototype);
 
 var Piece = module.exports.Piece = function (config) {
     this.point = config.point || {x:0,y:0};
-    this.hitRadius= config.hitRadius || 15;
+    this.hitRadius= config.hitRadius || 10;
     this.orientation = config.orientation || 0;
-    this.step = config.step || 15;
+    this.step = config.step || 10;
     this.sideStep = Math.sqrt((this.step*this.step)/2)
 };
 Piece.prototype = Object.create(Object.prototype);
+Piece.prototype.distanceToPiece= function(target){
+    return (Math.sqrt(dist2(this.point, target.point)))-(target.hitRadius + this.hitRadius);
+};
+
+
+var Shot = module.exports.Shot = function (config) {
+    Piece.call(this,{
+        hitRadius:5,
+        step:20
+    });
+    this.owner;
+};
+Piece.prototype = Object.create(Piece.prototype);
 
 
 
@@ -39,8 +51,8 @@ var Board = module.exports.Board = function (config) {
     }
 };
 Board.prototype = Object.create(Object.prototype);
-Board.prototype.convertToCellCoordinate = function(point){
-    return {
+Board.prototype.convertToCellCoordinate = function (point){
+    return {//I SUCK
         x:Math.floor(point.x/this.xScale),
         y:Math.floor(point.y/this.yScale)
     };
@@ -66,6 +78,12 @@ Board.prototype.movePiece = function (piece,destination) {
     this.putPieceAtCoordinate(piece,destination);
 };
 
+Board.prototype.removePiece = function (piece) {
+    if(piece.cell) {
+        removeFromArray(piece, piece.cell.pieces);
+    }
+};
+
 function sqr(x) { return x * x };
 function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) };
 function distToSegmentSquared(p, v, w) {
@@ -80,53 +98,62 @@ function distToSegmentSquared(p, v, w) {
 
 function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
 
-Board.prototype.collisionWalk = function(point1,point2,hitRadius){
-    var c1 = this.convertToCellCoordinate(point1);
-    var c2 = this.convertToCellCoordinate(point2);
-    var x;
-    var y;
-    var dx = c1.x < c2.x ? 1 : -1;
-    var dy = c1.y < c2.y ? 1 : -1;
-    var xL = c1.x < c2.x ? c2.x+1 : c1.x-1;
-    var yL = c1.y < c2.y ? c2.x+1 : c1.y-1;
+Board.prototype.collisionWalk = function(playerPiece,target){
     var colliding = {
         pieces : [],
         cells : []
     };
-    var collidingDistance;
-    //simple
-    if (!c2 ||!this.board[c2.x] || !this.board[c2.x][c2.y]){
-        console.log('debug this!');
-        return null;
-    }
-    var targetCell = this.board[c2.x][c2.y];
-    if(!targetCell.walkable){
-        colliding.cells.push(targetCell);
-    }
-    /*
-    for (x=c1.x; x!=xL;x=+dx){
-        for (y=c1.y; y!=yL;y+=dy){
-            var p;
-            var cell = this.board[x][y];
-            if ( cell.walkable ) {
-               for (p=0; p< cell.pieces.length; p++){
-                    var piece = cell.pieces[p];
-                    var distance = distToSegment(point1,point2, piece.point);
-                    var radiusGap = hitRadius + piece.hitRadius;
+
+    var targets = [target,{
+        x:target.x+playerPiece.hitRadius,
+        y:target.y
+    },{
+        x:target.x-playerPiece.hitRadius,
+        y:target.y
+    },{
+        x:target.x,
+        y:target.y-playerPiece.hitRadius
+    },{
+        x:target.x,
+        y:target.y+playerPiece.hitRadius
+    }];
+    var xScale = this.xScale;
+    var yScale = this.yScale;
+    var b=this.board;
+
+    var checks = [];
+    var check = function(t){
+        var c = {
+            x: Math.floor(t.x/xScale),
+            y: Math.floor(t.y/yScale)
+        };
+        var cell = b[c.x][c.y];
+        var checked = false;
+        checks.forEach(function(past){
+            checked = checked ||( past === cell);
+        });
+        if (!checked) {
+            checks.push(cell);
+            if(!cell.walkable){
+              colliding.cells.push(c);
+            }
+            cell.pieces.forEach(function(piece){
+                if (piece.id !== playerPiece.id){
+                    var distance = Math.sqrt(dist2(target, piece.point));
+                    var radiusGap = playerPiece.hitRadius + piece.hitRadius;
                     if (distance < radiusGap) {
-                        //collision
-                        var distToOrig = dist2(c1, piece.point) - radiusGap;
+                        console.log('collision '+playerPiece.point.x+','+playerPiece.point.y+'  '+target.x+','+target.y+' '+piece.point.x+','+piece.point.y+'  ');
                         colliding.pieces.push(piece);
-                        if (!colliding.closest || collidingDistance > distToOrig ){
-                            colliding.closest=piece;
-                            collidingDistance=distToOrig;
-                        }
                     }
                 }
-            } else {
-                colliding.cells.push(cell);
-            }
+            });
         }
-    }*/
+
+    };
+
+    targets.forEach(check);
+
+
+
     return colliding;
 };
