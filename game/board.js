@@ -64,6 +64,12 @@ var Shot = module.exports.Shot = function (shooter) {
 Shot.prototype = Object.create(Piece.prototype);
 
 
+var Character = module.exports.Character = function (conf) {
+    Piece.call(this,conf);
+    this.id = conf.id;
+    this.hits=0;
+};
+Character.prototype = Object.create(Piece.prototype);
 
 
 var Board = module.exports.Board = function (config) {
@@ -172,14 +178,73 @@ Board.prototype.collisionWalk = function(playerPiece,target){
                 checks.push(cell);
                 if(!cell.walkable){
                     colliding.cells.push(c);
+                } else {
+                    cell.pieces.forEach(function(piece){
+                        if (piece.collidable && (piece.id !== playerPiece.id)){
+                            var distance = Math.sqrt(dist2(target, piece.point));
+                            var radiusGap = playerPiece.hitRadius + piece.hitRadius;
+                            if (distance < radiusGap) {
+                                console.log('collision '+playerPiece.point.x+','+playerPiece.point.y+'  '+target.x+','+target.y+' '+piece.point.x+','+piece.point.y+'  ');
+                                colliding.pieces.push(piece);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    };
+
+    targets.forEach(check);
+    return colliding;
+};
+
+Board.prototype.collisionPoint = function(hitRadius,target){
+    var colliding = {
+        pieces : [],
+        cells : []
+    };
+
+    var targets = [target,{
+        x:target.x+hitRadius,
+        y:target.y
+    },{
+        x:target.x-hitRadius,
+        y:target.y
+    },{
+        x:target.x,
+        y:target.y-hitRadius
+    },{
+        x:target.x,
+        y:target.y+hitRadius
+    }];
+    var xScale = this.xScale;
+    var yScale = this.yScale;
+    var b=this.board;
+
+    var checks = [];
+    var check = function(t){
+        var c = {
+            x: Math.floor(t.x/xScale),
+            y: Math.floor(t.y/yScale)
+        };
+
+        if (b[c.x] &&  b[c.x][c.y]) {
+            var cell = b[c.x][c.y];
+            var checked = false;
+            checks.forEach(function(past){
+                checked = checked ||( past === cell);
+            });
+            if (!checked) {
+                checks.push(cell);
+                if(!cell.walkable){
+                    colliding.cells.push(c);
                 }
                 cell.pieces.forEach(function(piece){
-                    if (piece.collidable && (piece.id !== playerPiece.id)){
+                    if (piece.collidable){
                         var distance = Math.sqrt(dist2(target, piece.point));
-                        var radiusGap = playerPiece.hitRadius + piece.hitRadius;
+                        var radiusGap = hitRadius + piece.hitRadius;
                         if (distance < radiusGap) {
-                            console.log('collision '+playerPiece.point.x+','+playerPiece.point.y+'  '+target.x+','+target.y+' '+piece.point.x+','+piece.point.y+'  ');
-                            colliding.pieces.push(piece);
+                           colliding.pieces.push(piece);
                         }
                     }
                 });
@@ -188,8 +253,32 @@ Board.prototype.collisionWalk = function(playerPiece,target){
     };
 
     targets.forEach(check);
-
-
-
     return colliding;
+};
+
+
+var Game = module.exports.Game = function (config) {
+    this.board = new Board(config);
+    this.pieces = [];
+    this.players = [];
+};
+Game.prototype = Object.create(Object.prototype);
+Game.prototype.getPieceById = function(id) {
+    var i;
+    for ( i=0;i<this.pieces.length;i++){
+        if(this.pieces[i].id===id){
+            return this.pieces[i];
+        }
+    }
+    return null;
+};
+
+Game.prototype.getPlayerById = function(id) {
+    var i;
+    for ( i=0;i<this.players.length;i++){
+        if(this.players[i].id===id){
+            return this.players[i];
+        }
+    }
+    return null;
 };

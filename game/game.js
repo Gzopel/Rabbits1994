@@ -1,6 +1,6 @@
-var Board = require('./board').Board;
-var Piece = require('./board').Piece;
+var Character = require('./board').Character;
 var Shot = require('./board').Shot;
+var Game = require('./board').Game;
 var IO = null;
 
 var config ={
@@ -12,54 +12,29 @@ var config ={
     }
 };
 
-var Game = function (config) {
-    this.board = new Board(config);
-    this.pieces = [];
-    this.players = [];
-};
-Game.prototype = Object.create(Object.prototype);
-Game.prototype.getPieceById = function(id) {
-    var i;
-    for ( i=0;i<this.pieces.length;i++){
-        if(this.pieces[i].id===id){
-            return this.pieces[i];
-        }
-    }
-    return null;
-};
+var game = new Game(config);
 
-Game.prototype.getPlayerById = function(id) {
-    var i;
-    for ( i=0;i<this.players.length;i++){
-        if(this.players[i].id===id){
-            return this.players[i];
-        }
-    }
-    return null;
-};
-
-
-Game.prototype.move = function(movement){
-    if (!this.getPlayerById(movement.owner)) {
+var move = function(movement){
+    if (!game.getPlayerById(movement.owner)) {
         return;
     }
 
-    var piece = this.getPieceById(movement.owner);
+    var piece = game.getPieceById(movement.owner);
     if (piece) {
 
         piece.orientation=movement.orientation;
 
         var destination =piece.calculateMovement();
 
-        if (destination.x < 0 || destination.x >= this.board.width ||
-            destination.y < 0 || destination.y >= this.board.height ){
+        if (destination.x < 0 || destination.x >= game.board.width ||
+            destination.y < 0 || destination.y >= game.board.height ){
             //fuera de rango
         } else {
 
-            var collisions = this.board.collisionWalk(piece,destination);
+            var collisions = game.board.collisionWalk(piece,destination);
 
             if(!collisions) {
-                this.board.movePiece(piece,{x:this.board.width/2,y:this.board.height/2});
+                game.board.movePiece(piece,{x:game.board.width/2,y:game.board.height/2});
                 console.log('piece update');
                 IO.sockets.emit('piece update', {type:'revive', pieceId:piece.id, to:piece.point});
                 return;//hack!
@@ -70,65 +45,84 @@ Game.prototype.move = function(movement){
                 IO.sockets.emit('piece update', {type:'collision', pieceId:piece.id});
             } else {
                 piece.point=destination;
-                this.board.movePiece(piece,destination);
+                game.board.movePiece(piece,destination);
                 console.log('piece update');
                 IO.sockets.emit('piece update', {type:'walk', pieceId:piece.id, to:piece.point});
             }
         }
     }
 };
+var startingPositions = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
+                         {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
 
-Game.prototype.addPlayer = function(player){
+var getStartingPosition = function(hitRadius){
+    var i;
+    for ( i=0;i<startingPositions.length;i++){
+        var collisions = game.board.collisionPoint(hitRadius,startingPositions[i]);
+        if(!collisions.pieces.length && !collisions.cells.length ){
+            return  startingPositions[i];
+        }
+    }
+    return startingPositions[0];
+};
+
+var addPlayer = function(player){
     var playerPieceConfig = {
         collidable:true,
-        point : {x:150,y:150}//getStartingPosition()
+        id:player.id
     };
-    var playerPiece = new Piece(playerPieceConfig);
+    var playerPiece = new Character(playerPieceConfig);
 
-    playerPiece.id = player.id;
+    playerPiece.point = getStartingPosition(playerPiece.hitRadius);
 
-    this.players.push(playerPiece);
-    this.pieces.push(playerPiece);
+    game.players.push(playerPiece);
+    game.pieces.push(playerPiece);
 
-    this.board.putPieceAtCoordinate(playerPiece,playerPiece.point);
+    game.board.putPieceAtCoordinate(playerPiece,playerPiece.point);
 
     //notify all should be .sockets.in(gameID).emit
     var allPlayers = [];
-    this.pieces.forEach(function(piece) {
+    game.pieces.forEach(function(piece) {
         allPlayers.push({id:piece.id,point:piece.point});
     });
     IO.sockets.emit('players update', {action:'add',type:'player',target:player,position:playerPiece.point,all:allPlayers});
 };
 
-Game.prototype.attack = function (attack){
-    var attacker = this.getPlayerById(attack.owner);
-    for ( var i=0;i<this.pieces.length;i++){
-        if(this.pieces[i].id!==attacker.id){
-            if (attacker.distanceToPiece(this.pieces[i])<10) {
-                IO.sockets.emit('piece update', {type:'hit', pieceId:this.pieces[i].id, by:attacker.id});
+var attack = function (attack){
+    var attacker = game.getPlayerById(attack.owner);
+    for ( var i=0;i<game.pieces.length;i++){
+        if(game.pieces[i].id!==attacker.id){
+            if (attacker.distanceToPiece(game.pieces[i])<10) {
+                IO.sockets.emit('piece update', {type:'hit', pieceId:game.pieces[i].id, by:attacker.id});
             }
         }
     }
 };
 
-Game.prototype.removePlayer = function(id){
+var removePlayer = function(id){
     var i;
-    for ( i=0;i<this.players.length;i++){
-        if(this.players[i].id===id){
-            this.players.splice(i,1);
+    for ( i=0;i<game.players.length;i++){
+        if(game.players[i].id===id){
+            game.players.splice(i,1);
         }
     }
-    for ( i=0;i<this.pieces.length;i++){
-        if(this.pieces[i].id===id){
-            this.board.removePiece(this.pieces[i]);
-            this.pieces.splice(i,1);
+    for ( i=0;i<game.pieces.length;i++){
+        if(game.pieces[i].id===id){
+            game.board.removePiece(game.pieces[i]);
+            game.pieces.splice(i,1);
         }
     }
     IO.sockets.emit('players update', {action:'remove',target:id});
 };
 
-
-var game = new Game(config);
+var revive = function(characters){
+    characters.forEach(function(character){
+        character.hits=0;
+        character.point = getStartingPosition(character.hitRadius);
+        game.board.movePiece(character,character.point);
+        IO.sockets.emit('piece update', {type:'walk', pieceId:character.id, to:character.point});
+    });
+};
 
 var updateShot = function(shot){
     var destination = shot.calculateMovement();
@@ -141,12 +135,17 @@ var updateShot = function(shot){
 
         if(collisions.pieces.length){
             var targets = [];
+            var casualties = [];
             collisions.pieces.forEach(function(piece){
                 if(piece.id!==shot.owner){
+                    if(++piece.hits>=4){
+                        casualties.push(piece);
+                    }
                     targets.push({id:piece.id});
                 }
             });
             IO.sockets.emit('piece update', {type:'shot hit', target:targets, by:shot.id,owner:shot.owner});
+            revive(casualties);
         }else {
             shot.point=destination;
             IO.sockets.emit('piece update', {type:'walk', pieceId:shot.id, to:shot.point});
@@ -168,21 +167,21 @@ module.exports.attach = function(io){
     io.sockets.on('connection', function (socket) {
         socket.on('join', function(msg){
             socket.client.playerId = msg.player.id;
-            game.addPlayer( msg.player);
+            addPlayer( msg.player);
         });
         socket.on('disconnect',  function(msg){
             if(socket.client.playerId){
-                game.removePlayer(socket.client.playerId);
+                removePlayer(socket.client.playerId);
             }
         });
         socket.on('player action', function(msg){
             console.log(msg);
             if(msg.action === 'move'){
-                game.move(msg.movement);
+                move(msg.movement);
             } else if (msg.action === 'shoot'){
                 onShoot(msg);
             } else if(msg.action === 'attack'){
-               game.attack(msg);
+               attack(msg);
             }
         });
 
