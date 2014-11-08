@@ -12,22 +12,56 @@ var Piece = module.exports.Piece = function (config) {
     this.hitRadius= config.hitRadius || 10;
     this.orientation = config.orientation || 0;
     this.step = config.step || 10;
-    this.sideStep = Math.sqrt((this.step*this.step)/2)
+    this.sideStep = Math.sqrt((this.step*this.step)/2);
+    this.collidable = config.collidable;
 };
 Piece.prototype = Object.create(Object.prototype);
 Piece.prototype.distanceToPiece= function(target){
     return (Math.sqrt(dist2(this.point, target.point)))-(target.hitRadius + this.hitRadius);
 };
+Piece.prototype.calculateMovement = function(){
+    var destination = {
+        x : this.point.x,
+        y : this.point.y
+    };
+
+    if ( this.orientation === 0 ){//UP
+        destination.y+= this.step;
+    } else if ( this.orientation === 45 ){ //UP RIGHT
+        destination.y+= this.sideStep;
+        destination.x+= this.sideStep;
+    } else if ( this.orientation === 90 ){ //RIGHT
+        destination.x+=this.step;
+    } else if ( this.orientation === 135 ){ // DOWN RIGHT
+        destination.y-= this.sideStep;
+        destination.x+= this.sideStep;
+    } else if ( this.orientation === 180 ){ // DOWN
+        destination.y-=this.step;
+    } else if ( this.orientation === 225 ){ // DOWN LEFT
+        destination.y-= this.sideStep;
+        destination.x-= this.sideStep;
+    } else if ( this.orientation === 270 ){ // LEFT
+        destination.x-=this.step;
+    } else if ( this.orientation === 315 ){ //UP LEFT
+        destination.y+= this.sideStep;
+        destination.x-= this.sideStep;
+    }
+    return destination;
+};
 
 
-var Shot = module.exports.Shot = function (config) {
+
+var Shot = module.exports.Shot = function (shooter) {
     Piece.call(this,{
         hitRadius:5,
-        step:20
+        step:20,
+        collidable:false,
+        orientation : shooter.orientation,
+        point : {x:shooter.point.x,y:shooter.point.y}
     });
-    this.owner;
+    this.owner = shooter.id;
 };
-Piece.prototype = Object.create(Piece.prototype);
+Shot.prototype = Object.create(Piece.prototype);
 
 
 
@@ -84,8 +118,8 @@ Board.prototype.removePiece = function (piece) {
     }
 };
 
-function sqr(x) { return x * x };
-function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) };
+function sqr(x) { return x * x }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
 function distToSegmentSquared(p, v, w) {
     var l2 = dist2(v, w);
     if (l2 == 0) return dist2(p, v);
@@ -94,7 +128,7 @@ function distToSegmentSquared(p, v, w) {
     if (t > 1) return dist2(p, w);
     return dist2(p, { x: v.x + t * (w.x - v.x),
         y: v.y + t * (w.y - v.y) });
-};
+}
 
 function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
 
@@ -127,28 +161,30 @@ Board.prototype.collisionWalk = function(playerPiece,target){
             x: Math.floor(t.x/xScale),
             y: Math.floor(t.y/yScale)
         };
-        var cell = b[c.x][c.y];
-        var checked = false;
-        checks.forEach(function(past){
-            checked = checked ||( past === cell);
-        });
-        if (!checked) {
-            checks.push(cell);
-            if(!cell.walkable){
-              colliding.cells.push(c);
-            }
-            cell.pieces.forEach(function(piece){
-                if (piece.id !== playerPiece.id){
-                    var distance = Math.sqrt(dist2(target, piece.point));
-                    var radiusGap = playerPiece.hitRadius + piece.hitRadius;
-                    if (distance < radiusGap) {
-                        console.log('collision '+playerPiece.point.x+','+playerPiece.point.y+'  '+target.x+','+target.y+' '+piece.point.x+','+piece.point.y+'  ');
-                        colliding.pieces.push(piece);
-                    }
-                }
-            });
-        }
 
+        if (b[c.x] &&  b[c.x][c.y]) {
+            var cell = b[c.x][c.y];
+            var checked = false;
+            checks.forEach(function(past){
+                checked = checked ||( past === cell);
+            });
+            if (!checked) {
+                checks.push(cell);
+                if(!cell.walkable){
+                    colliding.cells.push(c);
+                }
+                cell.pieces.forEach(function(piece){
+                    if (piece.collidable && (piece.id !== playerPiece.id)){
+                        var distance = Math.sqrt(dist2(target, piece.point));
+                        var radiusGap = playerPiece.hitRadius + piece.hitRadius;
+                        if (distance < radiusGap) {
+                            console.log('collision '+playerPiece.point.x+','+playerPiece.point.y+'  '+target.x+','+target.y+' '+piece.point.x+','+piece.point.y+'  ');
+                            colliding.pieces.push(piece);
+                        }
+                    }
+                });
+            }
+        }
     };
 
     targets.forEach(check);

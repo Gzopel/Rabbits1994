@@ -2,7 +2,6 @@ var Board = require('./board').Board;
 var Piece = require('./board').Piece;
 var Shot = require('./board').Shot;
 var IO = null;
-var game = null;
 
 var config ={
     board:{
@@ -39,6 +38,7 @@ Game.prototype.getPlayerById = function(id) {
     return null;
 };
 
+
 Game.prototype.move = function(movement){
     if (!this.getPlayerById(movement.owner)) {
         return;
@@ -48,38 +48,15 @@ Game.prototype.move = function(movement){
     if (piece) {
 
         piece.orientation=movement.orientation;
-        var destination = {
-            x : piece.point.x,
-            y : piece.point.y
-        };
 
-        if (destination.x <= 0 || destination.x >= this.board.width ||
-            destination.y <= 0 || destination.x >= this.board.height ){
+        var destination =piece.calculateMovement();
+
+        if (destination.x < 0 || destination.x >= this.board.width ||
+            destination.y < 0 || destination.y >= this.board.height ){
             //fuera de rango
         } else {
-            if ( piece.orientation === 0 ){//UP
-                destination.y+= piece.step;
-            } else if ( piece.orientation === 45 ){ //UP RIGHT
-                destination.y+= piece.sideStep;
-                destination.x+= piece.sideStep;
-            } else if ( piece.orientation === 90 ){ //RIGHT
-                destination.x+=piece.step;
-            } else if ( piece.orientation === 135 ){ // DOWN RIGHT
-                destination.y-= piece.sideStep;
-                destination.x+= piece.sideStep;
-            } else if ( piece.orientation === 180 ){ // DOWN
-                destination.y-=piece.step;
-            } else if ( piece.orientation === 225 ){ // DOWN LEFT
-                destination.y-= piece.sideStep;
-                destination.x-= piece.sideStep;
-            } else if ( piece.orientation === 270 ){ // LEFT
-                destination.x-=piece.step;
-            } else if ( piece.orientation === 315 ){ //UP LEFT
-                destination.y+= piece.sideStep;
-                destination.x-= piece.sideStep;
-            }
 
-            var collisions = this.board.collisionWalk(piece,destination,piece.hitRadius);
+            var collisions = this.board.collisionWalk(piece,destination);
 
             if(!collisions) {
                 this.board.movePiece(piece,{x:this.board.width/2,y:this.board.height/2});
@@ -90,7 +67,7 @@ Game.prototype.move = function(movement){
 
             if (collisions.pieces.length || collisions.cells.length) {
                 console.log('collision');
-                IO.sockets.emit('piece update', {type:'collision', pieceId:piece.id,cells: collisions.cells});
+                IO.sockets.emit('piece update', {type:'collision', pieceId:piece.id});
             } else {
                 piece.point=destination;
                 this.board.movePiece(piece,destination);
@@ -100,12 +77,16 @@ Game.prototype.move = function(movement){
         }
     }
 };
-Game.prototype.addPlayer = function(player){
-    var playerPiece = new Piece({});
 
-    //set up starting position
-    playerPiece.point = {x:150,y:150};
+Game.prototype.addPlayer = function(player){
+    var playerPieceConfig = {
+        collidable:true,
+        point : {x:150,y:150}//getStartingPosition()
+    };
+    var playerPiece = new Piece(playerPieceConfig);
+
     playerPiece.id = player.id;
+
     this.players.push(playerPiece);
     this.pieces.push(playerPiece);
 
@@ -116,14 +97,9 @@ Game.prototype.addPlayer = function(player){
     this.pieces.forEach(function(piece) {
         allPlayers.push({id:piece.id,point:piece.point});
     });
-    IO.sockets.emit('players update', {action:'add',target:player,position:playerPiece.point,all:allPlayers});
+    IO.sockets.emit('players update', {action:'add',type:'player',target:player,position:playerPiece.point,all:allPlayers});
 };
 
-Game.prototype.shot = function (shot){
-    var shooter = game.getPlayerById(shot.owner);
-    var shot = new Shot();
-    shot.owner = shooter.id;
-};
 Game.prototype.attack = function (attack){
     var attacker = this.getPlayerById(attack.owner);
     for ( var i=0;i<this.pieces.length;i++){
@@ -151,9 +127,44 @@ Game.prototype.removePlayer = function(id){
     IO.sockets.emit('players update', {action:'remove',target:id});
 };
 
+
+var game = new Game(config);
+
+var updateShot = function(shot){
+    var destination = shot.calculateMovement();
+
+    if (destination.x < 0 || destination.x >= game.board.width ||
+        destination.y < 0 || destination.y >= game.board.height ){
+        IO.sockets.emit('piece update', {action:'remove',type:'shot',target:shot.id});
+    } else {
+        var collisions = game.board.collisionWalk(shot,destination);
+
+        if(collisions.pieces.length){
+            var targets = [];
+            collisions.pieces.forEach(function(piece){
+                if(piece.id!==shot.owner){
+                    targets.push({id:piece.id});
+                }
+            });
+            IO.sockets.emit('piece update', {type:'shot hit', target:targets, by:shot.id,owner:shot.owner});
+        }else {
+            shot.point=destination;
+            IO.sockets.emit('piece update', {type:'walk', pieceId:shot.id, to:shot.point});
+            setTimeout(updateShot,100,shot);
+        }
+    }
+};
+var shots = 0;
+var onShoot = function(shoot){
+    var shooter = game.getPlayerById(shoot.owner);
+    var shot = new Shot(shooter);
+    shot.id='shot'+shots++;
+    IO.sockets.emit('piece update', {action:'add',type:'shot', pieceId:shot.id, by:shot.owner,on:shot.point});
+    updateShot(shot);
+};
+
 module.exports.attach = function(io){
     IO = io;
-    game = new Game(config);
     io.sockets.on('connection', function (socket) {
         socket.on('join', function(msg){
             socket.client.playerId = msg.player.id;
@@ -169,7 +180,7 @@ module.exports.attach = function(io){
             if(msg.action === 'move'){
                 game.move(msg.movement);
             } else if (msg.action === 'shoot'){
-             //   game.shot(msg);
+                onShoot(msg);
             } else if(msg.action === 'attack'){
                game.attack(msg);
             }

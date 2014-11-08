@@ -1,26 +1,16 @@
 var express = require('express');
 var game = require('./game/game');
-var errorHandler = require('errorhandler');
-//var jwt = require('jsonwebtoken');
 
 var app = express();
 
 app.use(express.static('./public'));
-//app.use(cookieParser(/*'En mi pueblo le decimo macita'*/));
-//app.use(session());
-app.use(errorHandler());
 
 var users = 1;
-//var jwtSecret = 'superSecret';
+
 app.post('/login', function (req, res) {
-    // TODO: validate the actual user user
-    var profile = {
-        id: users++
-    };
-    //var token = jwt.sign(profile, jwtSecret, { expiresInMinutes: 60*5 });
     res.json({
         /*token: token,*/
-        id:profile.id,
+        id:users++,
         server: require('ip').address()
     });
 });

@@ -29,7 +29,7 @@ for (i = 0; i<10; i++ ) {
 var playerTexture = PIXI.Texture.fromImage('resources/bunny.png');
 var hitTexture = PIXI.Texture.fromImage('resources/hit.png');
 var players = [];
-
+var shots = [];
 //create stage
 var stage = new PIXI.Stage();
 stage.addChild(map);
@@ -51,10 +51,15 @@ module.exports ={
         myId = id;
         socket.on('piece update', function (msg) {
             console.log('piece update',msg);
-            if (msg.type ==='walk' && players[msg.pieceId]){
+            if (msg.type ==='walk' ){
                 var p = players[msg.pieceId];
-                p.position.x = msg.to.x-p.width/2;
-                p.position.y = (h - msg.to.y ) -30; // eje y invertido
+                if (!p){
+                    p = shots[msg.pieceId];
+                }
+                if (p) {
+                    p.position.x = msg.to.x-p.width/2;
+                    p.position.y = (h - msg.to.y ) -30; // eje y invertido
+                }
             } else if (msg.type ==='hit'){
                 var player = players[msg.pieceId];
                 var hit =  new PIXI.Sprite(hitTexture);
@@ -68,6 +73,34 @@ module.exports ={
                     stage.removeChild(hit);
                     delete hit;
                 },250);
+            } else if (msg.type === 'shot'){
+                if( msg.action === 'add') {
+                    var shot =  new PIXI.Sprite(hitTexture);
+                    shot.position.x=msg.on.x-5;
+                    shot.position.y=(h -msg.on.y)-5;
+                    stage.addChild(shot);
+                    shots[msg.pieceId]=shot;
+                } else if (msg.action === 'remove'){
+                    stage.removeChild(shots[msg.target]);
+                    delete shots[msg.target];
+                }
+            } else if (msg.type === 'shot hit'){
+                msg.target.forEach(function(target){
+                    var player = players[target.id];
+                    var hit =  new PIXI.Sprite(hitTexture);
+                    hit.scale.x=5;
+                    hit.scale.y=5;
+                    hit.position.x=player.position.x-25;
+                    hit.position.y=player.position.y-25;
+                    stage.addChild(hit);
+                    setTimeout(function(){
+                        hit.visible=false;
+                        stage.removeChild(hit);
+                        delete hit;
+                    },250);
+                    stage.removeChild(shots[msg.by]);
+                    delete shots[msg.by];
+                });
             }
         });
 
