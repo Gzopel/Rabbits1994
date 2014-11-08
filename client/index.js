@@ -14,8 +14,11 @@ jq.ajax({
 }).done(function (result) {
     //token = result.token;
     id = result.id;
+
+    var url = result.server || 'http://localhost/';
+
     console.log('logueado ',result);
-    socket = io('http://localhost/'/*,{ query: 'token=' + token}*/);
+    socket = io(url/*,{ query: 'token=' + token}*/);
 
         var controller = new Controller(socket,id);
 

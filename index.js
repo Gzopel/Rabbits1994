@@ -18,17 +18,14 @@ app.post('/login', function (req, res) {
         id: users++
     };
     //var token = jwt.sign(profile, jwtSecret, { expiresInMinutes: 60*5 });
-    res.json({/*token: token,*/id:profile.id});
+    res.json({
+        /*token: token,*/
+        id:profile.id,
+        server: require('ip').address()
+    });
 });
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-/*
-var socketioJwt = require('socket.io');//socketio-jwt
-var io = io.listen(http);
-io.use(socketioJwt.authorize({
-    secret: jwtSecret,
-    handshake: true
-}));*/
 
 
 game.attach(io);
