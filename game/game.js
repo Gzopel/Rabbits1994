@@ -5,10 +5,10 @@ var IO = null;
 
 var config ={
     board:{
-        width : 600,
-        height : 600,
-        columns : 10,
-        rows : 10
+        width : 1800,
+        height : 1800,
+        columns : 30,
+        rows : 30
     }
 };
 
@@ -94,6 +94,9 @@ var attack = function (attack){
         if(game.pieces[i].id!==attacker.id){
             if (attacker.distanceToPiece(game.pieces[i])<10) {
                 IO.sockets.emit('piece update', {type:'hit', pieceId:game.pieces[i].id, by:attacker.id});
+                if(++game.pieces[i].hits>=4){
+                    revive([game.pieces[i]]);
+                };
             }
         }
     }

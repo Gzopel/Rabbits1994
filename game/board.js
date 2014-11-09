@@ -53,7 +53,7 @@ Piece.prototype.calculateMovement = function(){
 
 var Shot = module.exports.Shot = function (shooter) {
     Piece.call(this,{
-        hitRadius:5,
+        hitRadius:4,
         step:20,
         collidable:false,
         orientation : shooter.orientation,
