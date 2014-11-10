@@ -6,7 +6,18 @@ var h=600;//window.innerHeight;
 var renderer = PIXI.autoDetectRenderer(w,h);
 document.body.appendChild(renderer.view);
 
+
+
 // create map
+var mapRef = {x:0,y:0};
+var mapMax= {x:1800,y:1800};
+var mapPointToPosition = function(point){
+    return {
+        x:point.x,
+        y:(mapMax.y -point.y)//inverted axis
+    }
+};
+
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
 var mapContainer = new PIXI.DisplayObjectContainer();
 var i;
@@ -17,7 +28,7 @@ var createWall = function(i,j){
     sprite.width=side;
     sprite.height=side;
     sprite.position.x= i*side;
-    sprite.position.y= j*side;
+    sprite.position.y= mapMax.y-side-j*side;
     mapContainer.addChild(sprite);
 };
 for (i = 0; i<30; i++ ) {
@@ -34,20 +45,10 @@ var animate = function () {
     renderer.render(stage);
     requestAnimationFrame(animate);
 };
-
-
 stage.addChild(mapContainer);
-
 var pieceContainer = new PIXI.DisplayObjectContainer();
 stage.addChild(pieceContainer);
-var mapRef = {x:0,y:0};
-var mapMax= {x:1800,y:1800};
-var mapPointToPosition = function(point){
-    return {
-        x:point.x,
-        y:(mapMax.y -point.y)//inverted axis
-    }
-};
+
 
 
 
@@ -154,6 +155,12 @@ var myId;
 var pieces = [];
 
 module.exports ={
+    loadMap:function(walls){
+      walls.forEach(function(wall){
+
+          createWall(wall.x,wall.y);
+      });
+    },
     attach :function(socket,id) {
         myId = id;
         socket.on('piece update', function (msg) {

@@ -96,7 +96,7 @@ var attack = function (attack){
                 IO.sockets.emit('piece update', {type:'hit', pieceId:game.pieces[i].id, by:attacker.id});
                 if(++game.pieces[i].hits>=4){
                     revive([game.pieces[i]]);
-                };
+                }
             }
         }
     }
@@ -164,6 +164,8 @@ var onShoot = function(shoot){
     IO.sockets.emit('piece update', {action:'add',type:'shot', pieceId:shot.id, by:shot.owner,on:shot.point});
     updateShot(shot);
 };
+
+module.exports.walls = game.board.wallList;
 
 module.exports.attach = function(io){
     IO = io;

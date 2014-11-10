@@ -21,7 +21,7 @@ jq.ajax({
     socket = io(url/*,{ query: 'token=' + token}*/);
 
         var controller = new Controller(socket,id);
-
+        renderer.loadMap(JSON.parse(result.map));
         renderer.attach(socket,id);
         renderer.start();
 

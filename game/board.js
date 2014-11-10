@@ -81,7 +81,7 @@ var Board = module.exports.Board = function (config) {
     this.yScale=this.height/this.yMax;
     var xIndex;
     var yIndex;
-    this.board = new Array(this.xMax);
+    var b = this.board = new Array(this.xMax);
     for (xIndex = 0; xIndex < this.xMax; xIndex++ ) {
         this.board[xIndex] = new Array(this.yMax);
         for (yIndex = 0; yIndex < this.yMax; yIndex++ ) {
@@ -89,6 +89,23 @@ var Board = module.exports.Board = function (config) {
             this.board[xIndex][yIndex] = new Cell(xIndex,yIndex,w);
         }
     }
+
+    var walls = [];
+
+    var wallAreas = [{x:0,y:10},{x:10,y:0},{x:20,y:10},{x:10,y:20}];
+    wallAreas.forEach(function (area) {
+        for(var i=area.x+1;i<area.x+10;i++){
+            var j=area.y+1;
+            for(var k = 0;k<2;k++){
+                j+=Math.floor(Math.random()*3)+1;
+                var c = b[i][j];
+                c.walkable=false;
+                walls.push({x: i,y: j});
+            }
+        }
+    });
+    this.wallList=walls;
+
 };
 Board.prototype = Object.create(Object.prototype);
 Board.prototype.convertToCellCoordinate = function (point){
