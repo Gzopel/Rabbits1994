@@ -149,7 +149,9 @@ var updateShot = function(shot){
             });
             IO.sockets.emit('piece update', {type:'shot hit', target:targets, by:shot.id,owner:shot.owner});
             revive(casualties);
-        }else {
+        } else if (collisions.cells.length){
+            IO.sockets.emit('piece update', {action:'remove',type:'shot',target:shot.id});
+        } else {
             shot.point=destination;
             IO.sockets.emit('piece update', {type:'walk', pieceId:shot.id, to:shot.point});
             setTimeout(updateShot,100,shot);
