@@ -126,7 +126,16 @@ var revive = function(characters){
         IO.sockets.emit('piece update', {type:'walk', pieceId:character.id, to:character.point});
     });
 };
+var updateKills = function(id,casualties){
+    var p = game.getPlayerById(id);
+    p.kills+=casualties.length;
+    var ids = [];
+    casualties.forEach(function(piece){
+       ids.push(piece.id);
+    });
 
+    IO.sockets.emit('players update', {action:'kill update',pk:id,casualties:ids});
+};
 var updateShot = function(shot){
     var destination = shot.calculateMovement();
 
@@ -149,6 +158,7 @@ var updateShot = function(shot){
             });
             IO.sockets.emit('piece update', {type:'shot hit', target:targets, by:shot.id,owner:shot.owner});
             revive(casualties);
+            updateKills(shot.owner,casualties);
         } else if (collisions.cells.length){
             IO.sockets.emit('piece update', {action:'remove',type:'shot',target:shot.id});
         } else {

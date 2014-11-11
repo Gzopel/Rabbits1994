@@ -1,9 +1,10 @@
 var PIXI  = require('pixi');
 
-var w=600;//window.innerWidth;
-var h=600;//window.innerHeight;
+var w=700;//
+var h=700;//
 
-var renderer = PIXI.autoDetectRenderer(w,h);
+console.log('creating renderer '+window.innerWidth+','+window.innerHeight);
+var renderer = PIXI.autoDetectRenderer(window.innerWidth,800);
 document.body.appendChild(renderer.view);
 
 
@@ -19,22 +20,57 @@ var mapPointToPosition = function(point){
 };
 
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
+var tiles = PIXI.Texture.fromImage('resources/tiles.png');
+var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
+var wallTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(60,0,60,60));
+var groundTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(120,0,60,60));
+var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(180,0,60,60));
+var grayTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(240,0,60,60));
+var whiteTexture= new PIXI.Texture(tiles,new PIXI.Rectangle(300,0,60,60));
+
+var uiContainer = new PIXI.DisplayObjectContainer();
+
+var sideBoard  = new PIXI.Sprite(uiTexture);
+sideBoard.height=800;
+sideBoard.width = 400;
+var realW  = window.innerWidth-400;
+sideBoard.position.x=realW;
+uiContainer.addChild(sideBoard);
+
+
 var mapContainer = new PIXI.DisplayObjectContainer();
+var minimapContainer = new PIXI.DisplayObjectContainer();
+minimapContainer.position.x=window.innerWidth-300;
+minimapContainer.position.y=50;
+var minipieceContainer = new PIXI.DisplayObjectContainer();
+minipieceContainer.position.x=window.innerWidth-300;
+minipieceContainer.position.y=50;
+
+var pieceContainer = new PIXI.DisplayObjectContainer();
 var i;
 var j;
 var side = 60;
-var createWall = function(i,j){
-    var sprite = new PIXI.Sprite(tileTexture);
+var createTile = function(i,j,texture){
+    var sprite = new PIXI.Sprite(texture);
     sprite.width=side;
     sprite.height=side;
     sprite.position.x= i*side;
     sprite.position.y= mapMax.y-side-j*side;
     mapContainer.addChild(sprite);
+
+    var miniSprite = new PIXI.Sprite(texture);
+    miniSprite.width=side/10;
+    miniSprite.height=side/10;
+    miniSprite.position.x= i*miniSprite.width;
+    miniSprite.position.y= 180-((1+j)*miniSprite.height);
+    minimapContainer.addChild(miniSprite);
 };
 for (i = 0; i<30; i++ ) {
     for (j = 0; j<30; j++ ) {
         if ((i == 0)||(j == 0)||(i == 29)||(j == 29)){
-            createWall(i,j);
+           createTile(i,j,tileTexture);
+        } else {
+          createTile(i,j,groundTexture);
         }
     }
 }
@@ -46,8 +82,10 @@ var animate = function () {
     requestAnimationFrame(animate);
 };
 stage.addChild(mapContainer);
-var pieceContainer = new PIXI.DisplayObjectContainer();
 stage.addChild(pieceContainer);
+stage.addChild(uiContainer);
+stage.addChild(minimapContainer);
+stage.addChild(minipieceContainer);
 
 
 
@@ -57,7 +95,15 @@ var createPiece = function(conf){
     var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
     sprite.width=conf.width||26;
     sprite.height=conf.height||37;
-    sprite.visible=true;
+
+    var miniSprite;
+    if(conf.miniTexture){
+        miniSprite = new PIXI.Sprite(conf.miniTexture);
+        miniSprite.height=6;
+        miniSprite.whidth=6;
+        minipieceContainer.addChild(miniSprite);
+    }
+
     var spriteCenter = {
         x:sprite.width/2,
         y:sprite.height*0.7
@@ -66,6 +112,10 @@ var createPiece = function(conf){
         var dm = mapPointToPosition(target);
         sprite.position.x = dm.x-spriteCenter.x;
         sprite.position.y = dm.y-spriteCenter.y;
+        if(miniSprite){
+            miniSprite.position.x =(sprite.position.x/10)-1;
+            miniSprite.position.y =(sprite.position.y/10)-1;
+        }
     };
     pieceContainer.addChild(sprite);
 
@@ -76,6 +126,7 @@ var createPiece = function(conf){
     console.log('new piece '+conf);
     return {
         sprite:sprite,
+        miniSprite:miniSprite,
         moveToPoint:move,
         getCenter: function(){
             return {
@@ -125,7 +176,8 @@ var createPlayer = function(player){
         texture:bunnyTexture,
         width:26,
         height:37,
-        point:player.point
+        point:player.point,
+        miniTexture:redTexture
     });
 
     var movePiece = piece.moveToPoint;
@@ -134,7 +186,10 @@ var createPlayer = function(player){
         piece.sprite.position.x = point.x-(piece.sprite.width/2);
         piece.sprite.position.y = (mapMax.y-point.y)-(piece.sprite.height*0.7);
 
-        mapRef.x=point.x-(w/2);
+        piece.miniSprite.position.x = point.x;
+        piece.miniSprite.position.y = mapMax.y-point.y;
+
+        mapRef.x=point.x-(realW/2);
         mapRef.y=point.y-(h/2);
         mapContainer.position.x= -mapRef.x;
         mapContainer.position.y= h-(mapMax.y-mapRef.y);
@@ -157,8 +212,7 @@ var pieces = [];
 module.exports ={
     loadMap:function(walls){
       walls.forEach(function(wall){
-
-          createWall(wall.x,wall.y);
+          createTile(wall.x,wall.y,tileTexture);
       });
     },
     attach :function(socket,id) {
@@ -195,11 +249,12 @@ module.exports ={
             if (msg.action === 'add'){
                 msg.all.forEach( function(player){
                     if (!pieces[player.id]){
-                        pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece(player);
+                        pieces[player.id]=(player.id===myId)?createPlayer(player,{miniTexture:whiteTexture}):createPiece(player);
                     }
                 });
             } else if (msg.action === 'remove'){
                 if (pieces[msg.target]){
+                    stage.removeChild(pieces[msg.target].miniSprite);
                     stage.removeChild(pieces[msg.target].sprite);
                     delete pieces[msg.target];
                 }

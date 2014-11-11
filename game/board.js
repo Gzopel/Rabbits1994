@@ -68,6 +68,7 @@ var Character = module.exports.Character = function (conf) {
     Piece.call(this,conf);
     this.id = conf.id;
     this.hits=0;
+    this.kills=0;
 };
 Character.prototype = Object.create(Piece.prototype);
 
