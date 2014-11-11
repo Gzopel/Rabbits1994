@@ -58,47 +58,47 @@ var Controller = module.exports.Controller = function(socket,id){
         }
     };
 
-    kd['UP'].down(function () {
+    kd['W'].down(function () {
         controls.up=true;
         movementUpdate();
     });
-    kd['UP'].up(function () {
+    kd['W'].up(function () {
         controls.up=false;
     });
-    kd['DOWN'].down(function () {
+    kd['S'].down(function () {
         controls.down=true;
         movementUpdate();
     });
-    kd['DOWN'].up(function () {
+    kd['S'].up(function () {
         controls.down=false;
     });
-    kd['LEFT'].down(function () {
+    kd['A'].down(function () {
         controls.left=true;
         movementUpdate();
     });
-    kd['LEFT'].up(function () {
+    kd['A'].up(function () {
         controls.left=false;
     });
-    kd['RIGHT'].down(function () {
+    kd['D'].down(function () {
         controls.right=true;
         movementUpdate();
     });
-    kd['RIGHT'].up(function () {
+    kd['D'].up(function () {
         controls.right=false;
     });
 
-    kd['Q'].down(function () {
+    kd['J'].down(function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
             socket.emit(msg_type, {action: 'attack',owner:id});
         }
     });
-    kd['W'].down(function () {
+    kd['K'].down(function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
             socket.emit(msg_type, {action: 'shoot',owner:id});
         }
-    });
+    });/*
     kd['E'].down(function () {
         console.log('block');
         if ((ticks-lastAttack) > attackLimit ) {
@@ -106,8 +106,8 @@ var Controller = module.exports.Controller = function(socket,id){
             socket.emit(msg_type, {action: 'block',owner:id});
         }
     });
-    //kd['R'].down(function () {
-    //});
+     kd['R'].down(function () {
+    });*/
 
     kd.run(function () {
         ticks++;

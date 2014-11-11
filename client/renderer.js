@@ -98,9 +98,9 @@ var createPiece = function(conf){
 
     var miniSprite;
     if(conf.miniTexture){
-        miniSprite = new PIXI.Sprite(conf.miniTexture);
+        miniSprite = new PIXI.Sprite(bunnyTexture);
         miniSprite.height=6;
-        miniSprite.whidth=6;
+        miniSprite.width=6;
         minipieceContainer.addChild(miniSprite);
     }
 
@@ -186,8 +186,8 @@ var createPlayer = function(player){
         piece.sprite.position.x = point.x-(piece.sprite.width/2);
         piece.sprite.position.y = (mapMax.y-point.y)-(piece.sprite.height*0.7);
 
-        piece.miniSprite.position.x = point.x;
-        piece.miniSprite.position.y = mapMax.y-point.y;
+        piece.miniSprite.position.x = piece.sprite.position.x/10;
+        piece.miniSprite.position.y = piece.sprite.position.y/10;
 
         mapRef.x=point.x-(realW/2);
         mapRef.y=point.y-(h/2);
@@ -249,13 +249,13 @@ module.exports ={
             if (msg.action === 'add'){
                 msg.all.forEach( function(player){
                     if (!pieces[player.id]){
-                        pieces[player.id]=(player.id===myId)?createPlayer(player,{miniTexture:whiteTexture}):createPiece(player);
+                        pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,miniTexture:whiteTexture});
                     }
                 });
             } else if (msg.action === 'remove'){
                 if (pieces[msg.target]){
-                    stage.removeChild(pieces[msg.target].miniSprite);
-                    stage.removeChild(pieces[msg.target].sprite);
+                    minipieceContainer.removeChild(pieces[msg.target].miniSprite);
+                    pieceContainer.removeChild(pieces[msg.target].sprite);
                     delete pieces[msg.target];
                 }
             }

@@ -7,10 +7,10 @@ var jq = require('jquery');
 //var token;
 var id;
 
-
+/*
 jq(document).on('keypress',function(event){
    event.preventDefault();
-});
+});*/
 
 jq.ajax({
     type: 'POST',
