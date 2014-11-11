@@ -52,18 +52,21 @@ var move = function(movement){
         }
     }
 };
-var startingPositions = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
+var startingPositions=[];
+startingPositions[1] = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
                          {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
+startingPositions[2] = [{x:1350,y:1350},{x:1650,y:1650},{x:1350,y:1650},{x:1650,y:1250},
+                        {x:1350,y:1500},{x:1500,y:1350},{x:1650,y:1500},{x:1500,y:1650}];
 
-var getStartingPosition = function(hitRadius){
+var getStartingPosition = function(team,hitRadius){
     var i;
-    for ( i=0;i<startingPositions.length;i++){
-        var collisions = game.board.collisionPoint(hitRadius,startingPositions[i]);
+    for ( i=0;i<startingPositions[team].length;i++){
+        var collisions = game.board.collisionPoint(hitRadius,startingPositions[team][i]);
         if(!collisions.pieces.length && !collisions.cells.length ){
-            return  startingPositions[i];
+            return  startingPositions[team][i];
         }
     }
-    return startingPositions[0];
+    return startingPositions[team][0];
 };
 
 var addPlayer = function(player){
@@ -73,8 +76,8 @@ var addPlayer = function(player){
     };
     var playerPiece = new Character(playerPieceConfig);
 
-    playerPiece.point = getStartingPosition(playerPiece.hitRadius);
-
+    playerPiece.team = 1 + (player.id%2);
+    playerPiece.point = getStartingPosition(playerPiece.team,playerPiece.hitRadius);
     game.players.push(playerPiece);
     game.pieces.push(playerPiece);
 
@@ -82,8 +85,8 @@ var addPlayer = function(player){
 
     //notify all should be .sockets.in(gameID).emit
     var allPlayers = [];
-    game.pieces.forEach(function(piece) {
-        allPlayers.push({id:piece.id,point:piece.point});
+    game.players.forEach(function(piece) {
+        allPlayers.push({id:piece.id,point:piece.point,team:piece.team});
     });
     IO.sockets.emit('players update', {action:'add',type:'player',target:player,position:playerPiece.point,all:allPlayers});
 };
@@ -121,7 +124,7 @@ var removePlayer = function(id){
 var revive = function(characters){
     characters.forEach(function(character){
         character.hits=0;
-        character.point = getStartingPosition(character.hitRadius);
+        character.point = getStartingPosition(character.team,character.hitRadius);
         game.board.movePiece(character,character.point);
         IO.sockets.emit('piece update', {type:'walk', pieceId:character.id, to:character.point});
     });
