@@ -1,10 +1,10 @@
 var PIXI  = require('pixi');
 
-var w=700;//
-var h=700;//
+var w=800;//
+var h=600;//
 
 console.log('creating renderer '+window.innerWidth+','+window.innerHeight);
-var renderer = PIXI.autoDetectRenderer(window.innerWidth,800);
+var renderer = PIXI.autoDetectRenderer(1040,600);
 document.body.appendChild(renderer.view);
 
 
@@ -19,6 +19,7 @@ var mapPointToPosition = function(point){
     }
 };
 
+var grassTexture = PIXI.Texture.fromImage('resources/grass.jpg');
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
 var tiles = PIXI.Texture.fromImage('resources/tiles.png');
 var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
@@ -32,19 +33,18 @@ var uiContainer = new PIXI.DisplayObjectContainer();
 
 var sideBoard  = new PIXI.Sprite(uiTexture);
 sideBoard.height=800;
-sideBoard.width = 400;
-var realW  = window.innerWidth-400;
-sideBoard.position.x=realW;
+sideBoard.width = 240;
+sideBoard.position.x=800;
 uiContainer.addChild(sideBoard);
 
 
 var mapContainer = new PIXI.DisplayObjectContainer();
 var minimapContainer = new PIXI.DisplayObjectContainer();
-minimapContainer.position.x=window.innerWidth-300;
-minimapContainer.position.y=50;
+minimapContainer.position.x=820;
+minimapContainer.position.y=20;
 var minipieceContainer = new PIXI.DisplayObjectContainer();
-minipieceContainer.position.x=window.innerWidth-300;
-minipieceContainer.position.y=50;
+minipieceContainer.position.x=820;
+minipieceContainer.position.y=20;
 
 var pieceContainer = new PIXI.DisplayObjectContainer();
 var i;
@@ -70,7 +70,7 @@ for (i = 0; i<30; i++ ) {
         if ((i == 0)||(j == 0)||(i == 29)||(j == 29)){
            createTile(i,j,tileTexture);
         } else {
-          createTile(i,j,groundTexture);
+          createTile(i,j,grassTexture);
         }
     }
 }
@@ -189,7 +189,7 @@ var createPlayer = function(player){
         piece.miniSprite.position.x = piece.sprite.position.x/10;
         piece.miniSprite.position.y = piece.sprite.position.y/10;
 
-        mapRef.x=point.x-(realW/2);
+        mapRef.x=point.x-(w/2);
         mapRef.y=point.y-(h/2);
         mapContainer.position.x= -mapRef.x;
         mapContainer.position.y= h-(mapMax.y-mapRef.y);
