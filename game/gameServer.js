@@ -52,22 +52,7 @@ var move = function(movement){
         }
     }
 };
-var startingPositions=[];
-startingPositions[1] = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
-                         {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
-startingPositions[2] = [{x:1350,y:1350},{x:1650,y:1650},{x:1350,y:1650},{x:1650,y:1250},
-                        {x:1350,y:1500},{x:1500,y:1350},{x:1650,y:1500},{x:1500,y:1650}];
 
-var getStartingPosition = function(team,hitRadius){
-    var i;
-    for ( i=0;i<startingPositions[team].length;i++){
-        var collisions = game.board.collisionPoint(hitRadius,startingPositions[team][i]);
-        if(!collisions.pieces.length && !collisions.cells.length ){
-            return  startingPositions[team][i];
-        }
-    }
-    return startingPositions[team][0];
-};
 
 var addPlayer = function(player){
     var playerPieceConfig = {
@@ -77,7 +62,7 @@ var addPlayer = function(player){
     var playerPiece = new Character(playerPieceConfig);
 
     playerPiece.team = 1 + (player.id%2);
-    playerPiece.point = getStartingPosition(playerPiece.team,playerPiece.hitRadius);
+    playerPiece.point = game.getStartingPosition(playerPiece.team,playerPiece.hitRadius);
     game.players.push(playerPiece);
     game.pieces.push(playerPiece);
 
@@ -124,7 +109,7 @@ var removePlayer = function(id){
 var revive = function(characters){
     characters.forEach(function(character){
         character.hits=0;
-        character.point = getStartingPosition(character.team,character.hitRadius);
+        character.point = game.getStartingPosition(character.team,character.hitRadius);
         game.board.movePiece(character,character.point);
         IO.sockets.emit('piece update', {type:'walk', pieceId:character.id, to:character.point});
     });
@@ -180,31 +165,17 @@ var onShoot = function(shoot){
     updateShot(shot);
 };
 
-module.exports.walls = game.board.wallList;
 
-module.exports.attach = function(io){
+module.exports.createServer = function(io){
     IO = io;
-    io.sockets.on('connection', function (socket) {
-        socket.on('join', function(msg){
-            socket.client.playerId = msg.player.id;
-            addPlayer( msg.player);
-        });
-        socket.on('disconnect',  function(msg){
-            if(socket.client.playerId){
-                removePlayer(socket.client.playerId);
-            }
-        });
-        socket.on('player action', function(msg){
-            console.log(msg);
-            if(msg.action === 'move'){
-                move(msg.movement);
-            } else if (msg.action === 'shoot'){
-                onShoot(msg);
-            } else if(msg.action === 'attack'){
-               attack(msg);
-            }
-        });
-
-        console.log('Socket '+socket.id+' connected');
-    });
+    return {
+        addPlayer: addPlayer,
+        removePlayer: removePlayer,
+        move: move,
+        shoot:onShoot,
+        attack:attack,
+        getWalls : function(){
+            return game.board.wallList;
+        }
+    }
 };

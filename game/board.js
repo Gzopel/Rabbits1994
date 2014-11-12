@@ -82,16 +82,18 @@ var Board = module.exports.Board = function (config) {
     this.yScale=this.height/this.yMax;
     var xIndex;
     var yIndex;
+    var walls = [];
     var b = this.board = new Array(this.xMax);
     for (xIndex = 0; xIndex < this.xMax; xIndex++ ) {
         this.board[xIndex] = new Array(this.yMax);
         for (yIndex = 0; yIndex < this.yMax; yIndex++ ) {
             var w = ((xIndex>0)&&(yIndex>0)&&(xIndex <(this.xMax-1))&& (yIndex<this.yMax-1));
             this.board[xIndex][yIndex] = new Cell(xIndex,yIndex,w);
+            /*if(!w){
+                walls.push({x: xIndex,y: yIndex});
+            }*/
         }
     }
-
-    var walls = [];
 
     var wallAreas = [{x:0,y:10},{x:10,y:0},{x:20,y:10},{x:10,y:20}];
     wallAreas.forEach(function (area) {
@@ -299,4 +301,20 @@ Game.prototype.getPlayerById = function(id) {
         }
     }
     return null;
+};
+
+var startingPositions=[];
+startingPositions[1] = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
+    {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
+startingPositions[2] = [{x:1350,y:1350},{x:1650,y:1650},{x:1350,y:1650},{x:1650,y:1250},
+    {x:1350,y:1500},{x:1500,y:1350},{x:1650,y:1500},{x:1500,y:1650}];
+Game.prototype.getStartingPosition = function(team,hitRadius){
+    var i;
+    for ( i=0;i<startingPositions[team].length;i++){
+        var collisions = this.board.collisionPoint(hitRadius,startingPositions[team][i]);
+        if(!collisions.pieces.length && !collisions.cells.length ){
+            return  startingPositions[team][i];
+        }
+    }
+    return startingPositions[team][0];
 };
