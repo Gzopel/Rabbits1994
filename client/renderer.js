@@ -25,8 +25,8 @@ var tiles = PIXI.Texture.fromImage('resources/tiles.png');
 var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
 var wallTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(60,0,60,60));
 var groundTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(120,0,60,60));
-var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(180,0,60,60));
-var grayTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(240,0,60,60));
+var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(180,0,20,20));
+var blueTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(241,0,20,20));
 var whiteTexture= new PIXI.Texture(tiles,new PIXI.Rectangle(300,0,60,60));
 
 var uiContainer = new PIXI.DisplayObjectContainer();
@@ -95,7 +95,15 @@ var createPiece = function(conf){
     var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
     sprite.width=conf.width||26;
     sprite.height=conf.height||37;
-
+    if(conf.team){
+        var tt = (conf.team===2)?blueTexture:redTexture;
+        var ts = new PIXI.Sprite(tt);
+        ts.height=3;
+        ts.width=14;
+        ts.position.x=6;
+        ts.position.y=7;
+        sprite.addChild(ts);
+    }
     var miniSprite;
     if(conf.miniTexture){
         miniSprite = new PIXI.Sprite(bunnyTexture);
@@ -177,6 +185,7 @@ var createPlayer = function(player){
         width:26,
         height:37,
         point:player.point,
+        team:player.team,
         miniTexture:redTexture
     });
 
@@ -249,7 +258,7 @@ module.exports ={
             if (msg.action === 'add'){
                 msg.all.forEach( function(player){
                     if (!pieces[player.id]){
-                        pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,miniTexture:whiteTexture});
+                        pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,team:player.team,miniTexture:whiteTexture});
                     }
                 });
             } else if (msg.action === 'remove'){
