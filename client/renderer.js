@@ -1,24 +1,15 @@
 var PIXI  = require('pixi');
 
-var w=800;//
+var w=800;//game camera W x H
 var h=600;//
 
-console.log('creating renderer '+window.innerWidth+','+window.innerHeight);
+console.log('creating renderer '+window.innerWidth+'x'+window.innerHeight);
 var renderer = PIXI.autoDetectRenderer(1040,600);
 document.body.appendChild(renderer.view);
 
 
-
-// create map
-var mapRef = {x:0,y:0};
-var mapMax= {x:1800,y:1800};
-var mapPointToPosition = function(point){
-    return {
-        x:point.x,
-        y:(mapMax.y -point.y)//inverted axis
-    }
-};
-
+var bunnyTexture = PIXI.Texture.fromImage('resources/bunny.png');
+var hitTexture = PIXI.Texture.fromImage('resources/hit.png');
 var grassTexture = PIXI.Texture.fromImage('resources/grass.jpg');
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
 var tiles = PIXI.Texture.fromImage('resources/tiles.png');
@@ -29,24 +20,28 @@ var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(180,0,20,20));
 var blueTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(241,0,20,20));
 var whiteTexture= new PIXI.Texture(tiles,new PIXI.Rectangle(300,0,60,60));
 
+
 var uiContainer = new PIXI.DisplayObjectContainer();
-
 var sideBoard  = new PIXI.Sprite(uiTexture);
-sideBoard.height=800;
+sideBoard.height=h;
 sideBoard.width = 240;
-sideBoard.position.x=800;
+sideBoard.position.x=w;
 uiContainer.addChild(sideBoard);
-
-
-var mapContainer = new PIXI.DisplayObjectContainer();
 var minimapContainer = new PIXI.DisplayObjectContainer();
-minimapContainer.position.x=820;
+minimapContainer.position.x=w+20;
 minimapContainer.position.y=20;
 var minipieceContainer = new PIXI.DisplayObjectContainer();
-minipieceContainer.position.x=820;
+minipieceContainer.position.x=w+20;
 minipieceContainer.position.y=20;
 
+var mapContainer = new PIXI.DisplayObjectContainer();
 var pieceContainer = new PIXI.DisplayObjectContainer();
+
+
+// create map
+var mapRef = {x:0,y:0};
+var mapMax= {x:1800,y:1800};
+//scale?
 var i;
 var j;
 var side = 60;
@@ -74,6 +69,12 @@ for (i = 0; i<30; i++ ) {
         }
     }
 }
+var mapPointToPosition = function(point){
+    return {
+        x:point.x,
+        y:mapMax.y -point.y//inverted axis
+    }
+};
 
 //create stage
 var stage = new PIXI.Stage();
@@ -90,7 +91,6 @@ stage.addChild(minipieceContainer);
 
 
 
-var bunnyTexture = PIXI.Texture.fromImage('resources/bunny.png');
 var createPiece = function(conf){
     var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
     sprite.width=conf.width||26;
@@ -152,7 +152,6 @@ var createPiece = function(conf){
 
 };
 
-var hitTexture = PIXI.Texture.fromImage('resources/hit.png');
 var createShot = function(shot){
     var piece= new createPiece({
         texture:hitTexture,

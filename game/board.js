@@ -95,8 +95,9 @@ var Board = module.exports.Board = function (config) {
         }
     }
 
-    var wallAreas = [{x:0,y:10},{x:10,y:0},{x:20,y:10},{x:10,y:20}];
-    wallAreas.forEach(function (area) {
+    var xWallAreas = [{x:0,y:10},{x:20,y:10}];
+    var yWallAreas = [{x:10,y:0},{x:10,y:20}];
+    xWallAreas.forEach(function (area) {
         for(var i=area.x+1;i<area.x+10;i++){
             var j=area.y+1;
             for(var k = 0;k<2;k++){
@@ -107,6 +108,30 @@ var Board = module.exports.Board = function (config) {
             }
         }
     });
+    yWallAreas.forEach(function (area) {
+        for(var j=area.y+1;j<area.y+10;j++){
+            var i=area.x+1;
+            for(var k = 0;k<2;k++){
+                i+=Math.floor(Math.random()*3)+1;
+                var c = b[i][j];
+                c.walkable=false;
+                walls.push({x: i,y: j});
+            }
+        }
+    });
+    var forestArea = [{x:20,y:1},{x:1,y:20}];
+    forestArea.forEach(function(area){
+       for(var i=area.x;i<area.x+10;i++){
+           for(var j=area.y;j<area.y+10;j++){
+               if(Math.floor(Math.random()*10/8)){
+                   var c = b[i][j];
+                   c.walkable=false;
+                   walls.push({x: i,y: j});
+               }
+           }
+       }
+    });
+
     this.wallList=walls;
 
 };

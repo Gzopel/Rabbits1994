@@ -1,4 +1,4 @@
-var Controller = require('./controller').Controller;
+var controller = require('./controller');
 var io = require('socket.io-client');
 var socket = null;
 var renderer = require('./renderer');
@@ -25,13 +25,12 @@ jq.ajax({
     console.log('logueado ',result);
     socket = io(url/*,{ query: 'token=' + token}*/);
 
-        var controller = new Controller(socket,id);
-        renderer.loadMap(JSON.parse(result.map));
-        renderer.attach(socket,id);
-        renderer.start();
+    controller.attach(socket,id,controller.actions);
+    renderer.loadMap(JSON.parse(result.map));
+    renderer.attach(socket,id);
+    renderer.start();
 
-        socket.emit('join',{player:{id:id}});
-
+    socket.emit('join',{player:{id:id}});
 });
 
 
