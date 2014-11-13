@@ -179,6 +179,7 @@ var createHit = function(player){
     },250);
 };
 
+//AKA camera+piece
 var createPlayer = function(player){
     var piece= new createPiece({
         texture:bunnyTexture,

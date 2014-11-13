@@ -14,7 +14,31 @@ var controls = {
 var msg_type = 'player action';
 var lastMovement = 0;
 
-
+var getOrientation = function(){
+    var orientation;
+    if (controls.up ) {
+        if (controls.left){
+            orientation = 315;
+        } else if (controls.right) {
+            orientation = 45;
+        } else {
+            orientation = 0;
+        }
+    } else if (controls.down ) {
+        if (controls.left){
+            orientation = 225;
+        } else if (controls.right) {
+            orientation = 135;
+        } else {
+            orientation = 180;
+        }
+    } else if (controls.left) {
+        orientation = 270;
+    } else if (controls.right) {
+        orientation = 90;
+    }
+    return orientation;
+};
 
 var Controller = module.exports.Controller = function(socket,id){
 
@@ -23,31 +47,9 @@ var Controller = module.exports.Controller = function(socket,id){
             action: 'move',
             movement:{
                 owner:id,
-                orientation:0
+                orientation:getOrientation()
             }
         };
-
-        if (controls.up ) {
-            if (controls.left){
-                msg.movement.orientation = 315;
-            } else if (controls.right) {
-                msg.movement.orientation = 45;
-            } else {
-                msg.movement.orientation = 0;
-            }
-        } else if (controls.down ) {
-            if (controls.left){
-                msg.movement.orientation = 225;
-            } else if (controls.right) {
-                msg.movement.orientation = 135;
-            } else {
-                msg.movement.orientation = 180;
-            }
-        } else if (controls.left) {
-            msg.movement.orientation = 270;
-        } else if (controls.right) {
-            msg.movement.orientation = 90;
-        }
 
         return msg;
     };
@@ -96,7 +98,7 @@ var Controller = module.exports.Controller = function(socket,id){
     kd['K'].down(function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
-            socket.emit(msg_type, {action: 'shoot',owner:id});
+            socket.emit(msg_type, {action: 'shoot',owner:id,orientation:getOrientation()});
         }
     });/*
     kd['E'].down(function () {

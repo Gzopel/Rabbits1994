@@ -160,6 +160,7 @@ var shots = 0;
 var onShoot = function(shoot){
     var shooter = game.getPlayerById(shoot.owner);
     var shot = new Shot(shooter);
+    shot.orientation=shoot.orientation;
     shot.id='shot'+shots++;
     IO.sockets.emit('piece update', {action:'add',type:'shot', pieceId:shot.id, by:shot.owner,on:shot.point});
     updateShot(shot);
