@@ -1,6 +1,6 @@
 var Character = require('./board').Character;
 var Shot = require('./board').Shot;
-var Game = require('./board').Game;
+var b = require('./board');
 var IO = null;
 
 var config ={
@@ -12,7 +12,7 @@ var config ={
     }
 };
 
-var game = new Game(config);
+var game = b.createGame(config);
 
 var move = function(movement){
     if (!game.getPlayerById(movement.owner)) {
@@ -73,7 +73,7 @@ var addPlayer = function(player){
     game.players.forEach(function(piece) {
         allPlayers.push({id:piece.id,point:piece.point,team:piece.team});
     });
-    IO.sockets.emit('players update', {action:'add',type:'player',target:player,position:playerPiece.point,all:allPlayers});
+    IO.sockets.emit('players update', {action:'add',type:'player',target:player,position:playerPiece.point,all:allPlayers,teamScore:teamScore});
 };
 
 var attack = function (attack){
@@ -84,6 +84,7 @@ var attack = function (attack){
                 IO.sockets.emit('piece update', {type:'hit', pieceId:game.pieces[i].id, by:attacker.id});
                 if(++game.pieces[i].hits>=4){
                     revive([game.pieces[i]]);
+                    updateKills(attack.owner,[game.pieces[i]]);
                 }
             }
         }
@@ -114,15 +115,21 @@ var revive = function(characters){
         IO.sockets.emit('piece update', {type:'walk', pieceId:character.id, to:character.point});
     });
 };
+var teamScore = [];
+teamScore[1]=0;
+teamScore[2]=0;
+
 var updateKills = function(id,casualties){
     var p = game.getPlayerById(id);
-    p.kills+=casualties.length;
     var ids = [];
     casualties.forEach(function(piece){
        ids.push(piece.id);
+        if(piece.team && piece.team!== p.team){
+            teamScore[p.team]++;
+            p.kills++;
+        }
     });
-
-    IO.sockets.emit('players update', {action:'kill update',pk:id,casualties:ids});
+    IO.sockets.emit('players update', {action:'kill update',pk:id,casualties:ids,teamScore:teamScore});
 };
 var updateShot = function(shot){
     var destination = shot.calculateMovement();

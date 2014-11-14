@@ -80,9 +80,14 @@ var Board = module.exports.Board = function (config) {
     this.yMax = config.board.rows || 10;
     this.xScale=this.width/this.xMax;
     this.yScale=this.height/this.yMax;
+    this.startingPositions=[];
+    this.startingPositions[1] = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
+        {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
+    this.startingPositions[2] = [{x:1350,y:1350},{x:1650,y:1650},{x:1350,y:1650},{x:1650,y:1250},
+        {x:1350,y:1500},{x:1500,y:1350},{x:1650,y:1500},{x:1500,y:1650}];
+
     var xIndex;
     var yIndex;
-    var walls = [];
     var b = this.board = new Array(this.xMax);
     for (xIndex = 0; xIndex < this.xMax; xIndex++ ) {
         this.board[xIndex] = new Array(this.yMax);
@@ -95,44 +100,54 @@ var Board = module.exports.Board = function (config) {
         }
     }
 
-    var xWallAreas = [{x:0,y:10},{x:20,y:10}];
-    var yWallAreas = [{x:10,y:0},{x:10,y:20}];
-    xWallAreas.forEach(function (area) {
-        for(var i=area.x+1;i<area.x+10;i++){
-            var j=area.y+1;
-            for(var k = 0;k<2;k++){
-                j+=Math.floor(Math.random()*3)+1;
-                var c = b[i][j];
-                c.walkable=false;
-                walls.push({x: i,y: j});
+    var walls = [];
+    var createWall = function(i,j){
+        var c = b[i][j];
+        c.walkable=false;
+        walls.push({x: i,y: j});
+    };
+
+    var createLineWall = function(i,j,k,l){
+        var y = j;
+        var dxy = (j-l)?(i-k)/(j-l):0;
+        for(var x = 0;x<=k-i;x++){
+            if (dxy){
+                dy=Math.floor(x*dxy);
+                for(var yy=0;yy<dy;yy++){
+                    createWall(i+x,y+yy);
+                }
+                y+=dy;
+            }else{
+                createWall(x+i,j);
             }
         }
-    });
-    yWallAreas.forEach(function (area) {
-        for(var j=area.y+1;j<area.y+10;j++){
-            var i=area.x+1;
-            for(var k = 0;k<2;k++){
-                i+=Math.floor(Math.random()*3)+1;
-                var c = b[i][j];
-                c.walkable=false;
-                walls.push({x: i,y: j});
-            }
-        }
-    });
-    var forestArea = [{x:20,y:1},{x:1,y:20}];
+    }
+
+    createLineWall(10,2,10,5);
+    createLineWall(10,7,10,9);
+    createLineWall(2,10,5,10);
+    createLineWall(7,10,9,10);
+
+    createLineWall(20,21,20,25);
+    createLineWall(20,27,20,29);
+    createLineWall(21,20,25,20);
+    createLineWall(25,20,29,20);
+
+    var forestArea = [{x:0,y:20},{x:10,y:20},
+                    {x:0,y:10},{x:20,y:10},
+                    {x:10,y:0},{x:20,y:0}];
     forestArea.forEach(function(area){
-       for(var i=area.x;i<area.x+10;i++){
-           for(var j=area.y;j<area.y+10;j++){
+       for(var i=area.x+1;i<=area.x+9;i++){
+           for(var j=area.y+1;j<=area.y+9;j++){
                if(Math.floor(Math.random()*10/8)){
-                   var c = b[i][j];
-                   c.walkable=false;
-                   walls.push({x: i,y: j});
+                   createWall(i,j);
                }
            }
        }
     });
 
     this.wallList=walls;
+
 
 };
 Board.prototype = Object.create(Object.prototype);
@@ -182,7 +197,7 @@ function distToSegmentSquared(p, v, w) {
 }
 
 function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
-
+//TODO refactor collisionWalnk & Point to reuse iteration for different callback
 Board.prototype.collisionWalk = function(playerPiece,target){
     var colliding = {
         pieces : [],
@@ -301,45 +316,39 @@ Board.prototype.collisionPoint = function(hitRadius,target){
     return colliding;
 };
 
-
-var Game = module.exports.Game = function (config) {
-    this.board = new Board(config);
-    this.pieces = [];
-    this.players = [];
-};
-Game.prototype = Object.create(Object.prototype);
-Game.prototype.getPieceById = function(id) {
-    var i;
-    for ( i=0;i<this.pieces.length;i++){
-        if(this.pieces[i].id===id){
-            return this.pieces[i];
+module.exports.createGame = function (config) {
+    var board = new Board(config);
+    return {
+        board:board,
+        pieces: [],
+        players: [],
+        getPieceById : function(id) {
+            var i;
+            for ( i=0;i<this.pieces.length;i++){
+                if(this.pieces[i].id===id){
+                    return this.pieces[i];
+                }
+            }
+            return null;
+        },
+        getPlayerById : function(id) {
+            var i;
+            for ( i=0;i<this.players.length;i++){
+                if(this.players[i].id===id){
+                    return this.players[i];
+                }
+            }
+            return null;
+        },
+        getStartingPosition : function(team,hitRadius) {
+            var i;
+            for (i = 0; i < board.startingPositions[team].length; i++) {
+                var collisions = board.collisionPoint(hitRadius, board.startingPositions[team][i]);
+                if (!collisions.pieces.length && !collisions.cells.length) {
+                    return board.startingPositions[team][i];
+                }
+            }
+            return board.startingPositions[team][0];
         }
     }
-    return null;
-};
-
-Game.prototype.getPlayerById = function(id) {
-    var i;
-    for ( i=0;i<this.players.length;i++){
-        if(this.players[i].id===id){
-            return this.players[i];
-        }
-    }
-    return null;
-};
-
-var startingPositions=[];
-startingPositions[1] = [{x:150,y:150},{x:450,y:450},{x:150,y:450},{x:450,y:150},
-    {x:150,y:300},{x:300,y:150},{x:450,y:300},{x:300,y:450}];
-startingPositions[2] = [{x:1350,y:1350},{x:1650,y:1650},{x:1350,y:1650},{x:1650,y:1250},
-    {x:1350,y:1500},{x:1500,y:1350},{x:1650,y:1500},{x:1500,y:1650}];
-Game.prototype.getStartingPosition = function(team,hitRadius){
-    var i;
-    for ( i=0;i<startingPositions[team].length;i++){
-        var collisions = this.board.collisionPoint(hitRadius,startingPositions[team][i]);
-        if(!collisions.pieces.length && !collisions.cells.length ){
-            return  startingPositions[team][i];
-        }
-    }
-    return startingPositions[team][0];
 };

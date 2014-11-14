@@ -16,9 +16,9 @@ var tiles = PIXI.Texture.fromImage('resources/tiles.png');
 var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
 var wallTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(60,0,60,60));
 var groundTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(120,0,60,60));
-var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(180,0,20,20));
+var redTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(200,0,20,20));
 var blueTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(241,0,20,20));
-var whiteTexture= new PIXI.Texture(tiles,new PIXI.Rectangle(300,0,60,60));
+var whiteTexture= new PIXI.Texture(tiles,new PIXI.Rectangle(320,0,20,20));
 
 
 var uiContainer = new PIXI.DisplayObjectContainer();
@@ -33,6 +33,31 @@ minimapContainer.position.y=20;
 var minipieceContainer = new PIXI.DisplayObjectContainer();
 minipieceContainer.position.x=w+20;
 minipieceContainer.position.y=20;
+
+var scoreContainer = new PIXI.DisplayObjectContainer();
+scoreContainer.position.x=w+20;
+scoreContainer.position.y=220;
+var teamScore1 =  new PIXI.Sprite(redTexture);
+teamScore1.width=85;
+teamScore1.height=40;
+scoreContainer.addChild(teamScore1);
+var teamScore2 =  new PIXI.Sprite(blueTexture);
+teamScore2.width=85;
+teamScore2.height=40;
+teamScore2.position.x=95;
+scoreContainer.addChild(teamScore2);
+var score1 = new PIXI.Text('0');
+score1.position.x=10;
+score1.position.y=10;
+scoreContainer.addChild(score1);
+var score2 = new PIXI.Text('0');
+score2.position.x=95;
+score2.position.y=10;
+scoreContainer.addChild(score2);
+
+var chatContainer = new PIXI.DisplayObjectContainer();
+chatContainer.position.x=w+20;
+chatContainer.position.y=280;
 
 var mapContainer = new PIXI.DisplayObjectContainer();
 var pieceContainer = new PIXI.DisplayObjectContainer();
@@ -87,7 +112,8 @@ stage.addChild(pieceContainer);
 stage.addChild(uiContainer);
 stage.addChild(minimapContainer);
 stage.addChild(minipieceContainer);
-
+stage.addChild(chatContainer);
+stage.addChild(scoreContainer);
 
 
 
@@ -240,9 +266,11 @@ module.exports ={
                 if( msg.action === 'add') {
                     pieces[msg.pieceId]=createShot(msg);
                 } else if (msg.action === 'remove'){
-                    pieceContainer.removeChild(pieces[msg.target].sprite);
-                    delete pieces[msg.target];
-                }
+                    if(pieces[msg.target]){
+                        pieceContainer.removeChild(pieces[msg.target].sprite);
+                        delete pieces[msg.target];
+                    }
+                 }
             } else if (msg.type === 'shot hit'){
                 msg.target.forEach(function(target){
                     var player = pieces[target.id];
@@ -261,12 +289,17 @@ module.exports ={
                         pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,team:player.team,miniTexture:whiteTexture});
                     }
                 });
+                score1.setText(msg.teamScore[1]);
+                score2.setText(msg.teamScore[2]);
             } else if (msg.action === 'remove'){
                 if (pieces[msg.target]){
                     minipieceContainer.removeChild(pieces[msg.target].miniSprite);
                     pieceContainer.removeChild(pieces[msg.target].sprite);
                     delete pieces[msg.target];
                 }
+            } else if (msg.action === 'kill update'){
+                score1.setText(msg.teamScore[1]);
+                score2.setText(msg.teamScore[2]);
             }
         });
     },
