@@ -109,36 +109,32 @@ var Board = module.exports.Board = function (config) {
 
     var createLineWall = function(i,j,k,l){
         var y = j;
-        var dxy = (j-l)?(i-k)/(j-l):0;
+        var dxy = (i-k)?(j-l)/(i-k):(j-l);
         for(var x = 0;x<=k-i;x++){
-            if (dxy){
-                dy=Math.floor(x*dxy);
-                for(var yy=0;yy<dy;yy++){
-                    createWall(i+x,y+yy);
-                }
-                y+=dy;
-            }else{
-                createWall(x+i,j);
+            var dy=Math.abs(Math.floor((x+1)*dxy));
+            for(var yy=0;yy<=dy;yy++){
+                createWall(i+x,y+yy);
             }
+            y+=dy;
         }
-    }
+    };
 
-    createLineWall(10,2,10,5);
-    createLineWall(10,7,10,9);
-    createLineWall(2,10,5,10);
-    createLineWall(7,10,9,10);
+    createLineWall(9,2,9,3);
+    createLineWall(9,6,9,7);
+    createLineWall(2,9,3,9);
+    createLineWall(6,9,7,9);
 
-    createLineWall(20,21,20,25);
-    createLineWall(20,27,20,29);
-    createLineWall(21,20,25,20);
-    createLineWall(25,20,29,20);
+    createLineWall(21,23,21,24);
+    createLineWall(21,26,21,27);
+    createLineWall(23,21,24,21);
+    createLineWall(26,21,27,21);
 
-    var forestArea = [{x:0,y:20},{x:10,y:20},
-                    {x:0,y:10},{x:20,y:10},
-                    {x:10,y:0},{x:20,y:0}];
+    var forestArea = [{x:1,y:20},{x:10,y:20},
+                    {x:1,y:10},{x:20,y:10},
+                    {x:10,y:1},{x:20,y:1}];
     forestArea.forEach(function(area){
-       for(var i=area.x+1;i<=area.x+9;i++){
-           for(var j=area.y+1;j<=area.y+9;j++){
+       for(var i=area.x;i<=area.x+9;i++){
+           for(var j=area.y;j<=area.y+9;j++){
                if(Math.floor(Math.random()*10/8)){
                    createWall(i,j);
                }

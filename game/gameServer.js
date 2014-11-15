@@ -83,8 +83,8 @@ var attack = function (attack){
             if (attacker.distanceToPiece(game.pieces[i])<10) {
                 IO.sockets.emit('piece update', {type:'hit', pieceId:game.pieces[i].id, by:attacker.id});
                 if(++game.pieces[i].hits>=4){
-                    revive([game.pieces[i]]);
                     updateKills(attack.owner,[game.pieces[i]]);
+                    revive([game.pieces[i]]);
                 }
             }
         }
@@ -147,13 +147,16 @@ var updateShot = function(shot){
                 if(piece.id!==shot.owner){
                     if(++piece.hits>=4){
                         casualties.push(piece);
+                        console.log(piece.id);
                     }
                     targets.push({id:piece.id});
                 }
             });
             IO.sockets.emit('piece update', {type:'shot hit', target:targets, by:shot.id,owner:shot.owner});
-            revive(casualties);
-            updateKills(shot.owner,casualties);
+            if(casualties.length){
+                revive(casualties);
+                updateKills(shot.owner,casualties);
+            }
         } else if (collisions.cells.length){
             IO.sockets.emit('piece update', {action:'remove',type:'shot',target:shot.id});
         } else {

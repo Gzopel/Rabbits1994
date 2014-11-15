@@ -4,7 +4,7 @@ var w=800;//game camera W x H
 var h=600;//
 
 console.log('creating renderer '+window.innerWidth+'x'+window.innerHeight);
-var renderer = PIXI.autoDetectRenderer(1040,600);
+var renderer = PIXI.autoDetectRenderer(1030,600);
 document.body.appendChild(renderer.view);
 
 
@@ -27,6 +27,14 @@ sideBoard.height=h;
 sideBoard.width = 240;
 sideBoard.position.x=w;
 uiContainer.addChild(sideBoard);
+
+var chatBackground = new PIXI.Sprite(whiteTexture);
+chatBackground.height=h-310;
+chatBackground.width=180;
+chatBackground.position.x=w+20;
+chatBackground.position.y=290;
+uiContainer.addChild(chatBackground);
+
 var minimapContainer = new PIXI.DisplayObjectContainer();
 minimapContainer.position.x=w+20;
 minimapContainer.position.y=20;
@@ -57,7 +65,31 @@ scoreContainer.addChild(score2);
 
 var chatContainer = new PIXI.DisplayObjectContainer();
 chatContainer.position.x=w+20;
-chatContainer.position.y=280;
+chatContainer.position.y=h-40;
+var lastPosition=0;
+var chatHistory = [];
+var addToChat = function(msg){
+    var text = new PIXI.Text(msg,{font:'16px Arial'});
+    text.setText(msg);
+    text.position.y=lastPosition+text.height;
+    chatContainer.addChild(text);
+    chatHistory.push(text);
+    lastPosition+=text.height;
+    if (lastPosition>chatBackground.height){
+        var old = chatHistory[0];
+        chatHistory.splice(0,1);
+        chatHistory.forEach(function(c){
+            c.position.y-=old.height;
+        });
+        lastPosition-=old.height;
+        chatContainer.position.y+=old.height;
+        chatContainer.removeChild(old);
+        delete old;
+    }
+    chatContainer.position.y-=text.height;//autoscroll
+};
+
+
 
 var mapContainer = new PIXI.DisplayObjectContainer();
 var pieceContainer = new PIXI.DisplayObjectContainer();
@@ -112,8 +144,8 @@ stage.addChild(pieceContainer);
 stage.addChild(uiContainer);
 stage.addChild(minimapContainer);
 stage.addChild(minipieceContainer);
-stage.addChild(chatContainer);
 stage.addChild(scoreContainer);
+stage.addChild(chatContainer);
 
 
 
@@ -286,6 +318,7 @@ module.exports ={
             if (msg.action === 'add'){
                 msg.all.forEach( function(player){
                     if (!pieces[player.id]){
+                        addToChat('new player '+player.id);
                         pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,team:player.team,miniTexture:whiteTexture});
                     }
                 });
@@ -298,8 +331,13 @@ module.exports ={
                     delete pieces[msg.target];
                 }
             } else if (msg.action === 'kill update'){
-                score1.setText(msg.teamScore[1]);
-                score2.setText(msg.teamScore[2]);
+                if(msg.teamScore){
+                    score1.setText(msg.teamScore[1]);
+                    score2.setText(msg.teamScore[2]);
+                }
+                if(msg.casualties){
+                    addToChat('player '+msg.pk+' killed player'+(msg.casualties.length>1?'s ':' ')+msg.casualties);
+                }
             }
         });
     },
