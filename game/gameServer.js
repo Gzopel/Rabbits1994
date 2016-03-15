@@ -16,6 +16,7 @@ var game = b.createGame(config);
 
 var move = function(movement){
     if (!game.getPlayerById(movement.owner)) {
+        console.log("no player for piece");
         return;
     }
 
@@ -28,7 +29,7 @@ var move = function(movement){
 
         if (destination.x < 0 || destination.x >= game.board.width ||
             destination.y < 0 || destination.y >= game.board.height ){
-            //fuera de rango
+            console.log("out of range")
         } else {
 
             var collisions = game.board.collisionWalk(piece,destination);
@@ -50,6 +51,8 @@ var move = function(movement){
                 IO.sockets.emit('piece update', {type:'walk', pieceId:piece.id, to:piece.point});
             }
         }
+    } else {
+        console.log("no piece to move")
     }
 };
 
@@ -176,15 +179,39 @@ var onShoot = function(shoot){
     updateShot(shot);
 };
 
+var action = function(action) {
+    if (actions[ticks+2] == null)
+        actions[ticks+2]=[];
 
+    console.log("tick ",ticks," action ",action);
+    actions[ticks+2].push(action);
+};
+
+var ticks = 0;
+var actions = {};
 module.exports.createServer = function(io){
     IO = io;
+
+    setInterval(function(){
+        console.log("ticking "+ticks);
+        while(actions[ticks] && actions[ticks].length>0) {
+            var action = actions[ticks].pop();
+            console.log(ticks,"- ",action);
+            if(action.action === 'move') {
+              move(action.movement);
+            } else if (action.action === 'shoot' ) {
+              onShoot(action)
+            } else if (action.action === 'attack') {
+
+            }
+        }
+        ticks++;
+    },1000/60);
+
     return {
         addPlayer: addPlayer,
         removePlayer: removePlayer,
-        move: move,
-        shoot:onShoot,
-        attack:attack,
+        action: action,
         getWalls : function(){
             return game.board.wallList;
         }

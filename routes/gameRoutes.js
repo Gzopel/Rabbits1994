@@ -15,13 +15,7 @@ module.exports.attach = function(io){
         });
         socket.on('player action', function(msg){
             console.log(msg);
-            if(msg.action === 'move'){
-                server.move(msg.movement);
-            } else if (msg.action === 'shoot'){
-                server.shoot(msg);
-            } else if(msg.action === 'attack'){
-                server.attack(msg);
-            }
+            server.action(msg);
         });
 
         console.log('Socket '+socket.id+' connected');
