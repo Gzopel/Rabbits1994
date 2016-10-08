@@ -20,7 +20,7 @@ jq.ajax({
     //token = result.token;
     id = result.id;
 
-    var url = 'https://rabbitsnineteenninetyfour.herokuapp.com/';
+    var url = 'https://rabbits1994.herokuapp.com/';
     // result.server || 'http://localhost/';
 
     console.log('logueado ',result);
