@@ -13,6 +13,7 @@ var hitTexture = PIXI.Texture.fromImage('resources/hit.png');
 var grassTexture = PIXI.Texture.fromImage('resources/grass.jpg');
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
 var tiles = PIXI.Texture.fromImage('resources/tiles.png');
+var treesTexture = PIXI.Texture.fromImage('resources/trees.png');
 var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
 var wallTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(60,0,60,60));
 var groundTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(120,0,60,60));
@@ -277,9 +278,12 @@ var myId;
 var pieces = [];
 
 module.exports ={
-    loadMap:function(walls){
-      walls.forEach(function(wall){
-          createTile(wall.x,wall.y,tileTexture);
+    loadMap:function(map){
+      map.walls.forEach(function(wall){
+        createTile(wall.x,wall.y,tileTexture);
+      });
+      map.trees.forEach(function(tree){
+        createTile(tree.x,tree.y,treesTexture);
       });
     },
     attach :function(socket,id) {

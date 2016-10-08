@@ -211,8 +211,8 @@ module.exports.createServer = function(io){
         addPlayer: addPlayer,
         removePlayer: removePlayer,
         action: action,
-        getWalls : function(){
-            return game.board.wallList;
+        getMap : function(){
+            return {walls: game.board.wallList, trees: game.board.trees};
         }
     }
 };

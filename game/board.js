@@ -132,20 +132,23 @@ var Board = module.exports.Board = function (config) {
     var forestArea = [{x:1,y:20},{x:10,y:20},
                     {x:1,y:10},{x:20,y:10},
                     {x:10,y:1},{x:20,y:1}];
+    var trees = [];
     forestArea.forEach(function(area){
        for(var i=area.x;i<=area.x+9;i++){
            for(var j=area.y;j<=area.y+9;j++){
                if(Math.floor(Math.random()*10/8)){
-                   createWall(i,j);
+                   var c = b[i][j];
+                   c.walkable=false;
+                   trees.push({x: i,y: j});
                }
            }
        }
     });
 
     this.wallList=walls;
-
-
+    this.trees = trees;
 };
+
 Board.prototype = Object.create(Object.prototype);
 Board.prototype.convertToCellCoordinate = function (point){
     return {//I SUCK

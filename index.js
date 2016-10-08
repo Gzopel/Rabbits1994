@@ -16,7 +16,7 @@ app.post('/login', function (req, res) {
         /*token: token,*/
         id:users++,
         server: require('ip').address(),
-        map:JSON.stringify(game.getWalls())
+        map:JSON.stringify(game.getMap()),
     });
 });
 
