@@ -20,7 +20,8 @@ jq.ajax({
     //token = result.token;
     id = result.id;
 
-    var url = result.server || 'http://localhost/';
+    var url = 'https://rabbitsnineteenninetyfour.herokuapp.com/';
+    // result.server || 'http://localhost/';
 
     console.log('logueado ',result);
     socket = io(url/*,{ query: 'token=' + token}*/);
