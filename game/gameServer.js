@@ -193,7 +193,6 @@ module.exports.createServer = function(io){
     IO = io;
 
     setInterval(function(){
-        console.log("ticking "+ticks);
         while(actions[ticks] && actions[ticks].length>0) {
             var action = actions[ticks].pop();
             console.log(ticks,"- ",action);
