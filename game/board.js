@@ -134,8 +134,8 @@ var Board = module.exports.Board = function (config) {
                     {x:10,y:1},{x:20,y:1}];
     var trees = [];
     forestArea.forEach(function(area){
-       for(var i=area.x;i<=area.x+9;i++){
-           for(var j=area.y;j<=area.y+9;j++){
+       for(var i=area.x;i<area.x+9;i++){
+           for(var j=area.y;j<area.y+9;j++){
                if(Math.floor(Math.random()*10/8)){
                    var c = b[i][j];
                    c.walkable=false;
