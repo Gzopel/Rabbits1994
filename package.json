@@ -26,6 +26,7 @@
     "pixi": "0.2.1",
     "socket.io": "1.1.0",
     "socket.io-client": "1.1.0",
-    "socketio-jwt": "2.3.5"
+    "socketio-jwt": "2.3.5",
+    "uuid": "^2.0.3"
   }
 }

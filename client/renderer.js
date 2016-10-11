@@ -14,6 +14,10 @@ var grassTexture = PIXI.Texture.fromImage('resources/grass.jpg');
 var tileTexture = PIXI.Texture.fromImage('resources/tile.jpg');
 var tiles = PIXI.Texture.fromImage('resources/tiles.png');
 var treesTexture = PIXI.Texture.fromImage('resources/trees.png');
+var treeTextureOne = PIXI.Texture.fromImage('resources/tree1.png');
+var treeTextureTwo = PIXI.Texture.fromImage('resources/tree2.png');
+var treeTextureThree = PIXI.Texture.fromImage('resources/tree3.png');
+var treeTextures = [treeTextureOne, treeTextureTwo, treeTextureThree];
 var uiTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(0,0,60,60));
 var wallTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(60,0,60,60));
 var groundTexture = new PIXI.Texture(tiles,new PIXI.Rectangle(120,0,60,60));
@@ -90,20 +94,31 @@ var addToChat = function(msg){
     chatContainer.position.y-=text.height;//autoscroll
 };
 
-
+function getTreeTexture() {
+  return treeTextures[Math.round(Math.random()*(treeTextures.length -1))];
+}
 
 var mapContainer = new PIXI.DisplayObjectContainer();
 var pieceContainer = new PIXI.DisplayObjectContainer();
 
+function sqr(x) { return x * x; };
+function vectorDistanceToVector(v, w) { return Math.sqrt(sqr(v.x - w.x) + sqr(v.y - w.y)); };
 
+
+var mapRef = {x:0,y: 0};
+var mapMax = {x: 800,y:800};
 // create map
-var mapRef = {x:0,y:0};
-var mapMax= {x:1800,y:1800};
-//scale?
-var i;
-var j;
-var side = 60;
-var createTile = function(i,j,texture){
+function createMap(mapConfig) {
+  mapMax = convertPosition(mapConfig.size);
+  var i;
+  var j;
+  var side = 60;
+  var usedMap = [];
+  for (i = 0; i<mapMax.x/side; i++ ) {
+    usedMap[i] = [];
+  }
+  var createTile = function(i,j,texture){
+    if (usedMap[i] && usedMap[i][j]) return;
     var sprite = new PIXI.Sprite(texture);
     sprite.width=side;
     sprite.height=side;
@@ -117,38 +132,68 @@ var createTile = function(i,j,texture){
     miniSprite.position.x= i*miniSprite.width;
     miniSprite.position.y= 180-((1+j)*miniSprite.height);
     minimapContainer.addChild(miniSprite);
-};
-for (i = 0; i<30; i++ ) {
-    for (j = 0; j<30; j++ ) {
-        if ((i == 0)||(j == 0)||(i == 29)||(j == 29)){
-           createTile(i,j,tileTexture);
-        } else {
-          createTile(i,j,grassTexture);
-        }
+  };
+  function isAnExit(x,y) {
+    if (mapConfig.exits) {
+      for (var k = 0; k < mapConfig.exits.length; k++ ){
+        var exit = mapConfig.exits[k];
+        var center = convertPosition(exit.position);
+        var distance = vectorDistanceToVector(center,{x:x,y:y});
+        if (distance <= exit.radius)
+          return true;
+      }
     }
+    return false;
+  }
+  var maxI = (mapMax.x/side);
+  var maxJ = (mapMax.y/side);
+  for (i = 0; i<=maxI; i++ ) {
+    for (j = 0; j<=maxJ; j++ ) {
+      if(isAnExit(i*side,j*side)) {
+        createTile(i,j,tileTexture);
+      } else {
+        createTile(i,j,grassTexture);
+      }
+    }
+  }
+
 }
+
 var mapPointToPosition = function(point){
     return {
         x:point.x,
-        y:mapMax.y -point.y//inverted axis
+        y: mapMax.y -point.y//inverted axis
     }
 };
 
-//create stage
-var stage = new PIXI.Stage();
-var animate = function () {
-    renderer.render(stage);
-    requestAnimationFrame(animate);
-};
-stage.addChild(mapContainer);
-stage.addChild(pieceContainer);
-stage.addChild(uiContainer);
-stage.addChild(minimapContainer);
-stage.addChild(minipieceContainer);
-stage.addChild(scoreContainer);
-stage.addChild(chatContainer);
+var animate;
+var stage;
+var running = true;
+function createStage() {
+    stage = new PIXI.Stage();
+    animate = function () {
+        if(!running) return;
+        renderer.render(stage);
+        requestAnimationFrame(animate);
+    };
+    stage.addChild(mapContainer);
+    stage.addChild(pieceContainer);
+    stage.addChild(uiContainer);
+    stage.addChild(minimapContainer);
+    stage.addChild(minipieceContainer);
+    stage.addChild(scoreContainer);
+    stage.addChild(chatContainer);
+}
 
-
+function addTree(msg) {
+  var texture = getTreeTexture();
+  createPiece({
+    texture: texture,
+    miniTexture: texture,
+    id: msg.character,
+    point: convertPosition(msg.position),
+  });
+}
 
 var createPiece = function(conf){
     var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
@@ -165,7 +210,7 @@ var createPiece = function(conf){
     }
     var miniSprite;
     if(conf.miniTexture){
-        miniSprite = new PIXI.Sprite(bunnyTexture);
+        miniSprite = new PIXI.Sprite(conf.texture||bunnyTexture);
         miniSprite.height=6;
         miniSprite.width=6;
         minipieceContainer.addChild(miniSprite);
@@ -173,7 +218,7 @@ var createPiece = function(conf){
 
     var spriteCenter = {
         x:sprite.width/2,
-        y:sprite.height*0.7
+        y: sprite.height*0.7
     };
     var move = function(target){
         var dm = mapPointToPosition(target);
@@ -198,13 +243,13 @@ var createPiece = function(conf){
         getCenter: function(){
             return {
                 x:sprite.position.x+spriteCenter.x,
-                y:sprite.position.y+spriteCenter.y
+                y: sprite.position.y+spriteCenter.y
             }
         },
         distanceTo: function(position){
             return {
                 x:sprite.position.x+spriteCenter.x-position.x,
-                y:sprite.position.y+spriteCenter.y-position.y
+                y: sprite.position.y+spriteCenter.y-position.y
             }
         }
     }
@@ -216,7 +261,7 @@ var createShot = function(shot){
         texture:hitTexture,
         width:10,
         height:10,
-        point:shot.on
+        point: convertPosition(shot.position)
     });
     return piece;
 };
@@ -238,13 +283,13 @@ var createHit = function(player){
 };
 
 //AKA camera+piece
-var createPlayer = function(player){
+var createPlayer = function(position){
     var piece= new createPiece({
         texture:bunnyTexture,
         width:26,
         height:37,
-        point:player.point,
-        team:player.team,
+        point:position,
+        team:1,
         miniTexture:redTexture
     });
 
@@ -267,86 +312,90 @@ var createPlayer = function(player){
      //   movePiece(point);
     };
 
-    piece.moveToPoint(player.point);
-
+    piece.moveToPoint(position);
 
     return piece;
 };
 
+function convertPosition(v) {
+    return {
+        x:v.x,
+        y:v.z
+    }
+}
 
 var myId;
 var pieces = [];
 
-module.exports ={
-    loadMap:function(map){
-      map.walls.forEach(function(wall){
-        createTile(wall.x,wall.y,tileTexture);
-      });
-      map.trees.forEach(function(tree){
-        createTile(tree.x,tree.y,treesTexture);
-      });
-    },
-    attach :function(socket,id) {
-        myId = id;
-        socket.on('piece update', function (msg) {
-            console.log('piece update',msg);
-            if (msg.type ==='walk' ){
-                var p = pieces[msg.pieceId];
-                if (p) {
-                    p.moveToPoint(msg.to);
-                }
-            } else if (msg.type ==='hit'){
-                var player = pieces[msg.pieceId];
-                createHit(player);
-            } else if (msg.type === 'shot'){
-                if( msg.action === 'add') {
-                    pieces[msg.pieceId]=createShot(msg);
-                } else if (msg.action === 'remove'){
-                    if(pieces[msg.target]){
-                        pieceContainer.removeChild(pieces[msg.target].sprite);
-                        delete pieces[msg.target];
-                    }
-                 }
-            } else if (msg.type === 'shot hit'){
-                msg.target.forEach(function(target){
-                    var player = pieces[target.id];
-                    createHit(player);
-                });
-                pieceContainer.removeChild(pieces[msg.by].sprite);
-                delete pieces[msg.by];
-            }
-        });
+var addCharacter = function (msg) {
+  pieces[msg.character] = (msg.character === myId) ?
+    createPlayer(convertPosition(msg.position)) :
+    createPiece({
+      id: msg.character,
+      point: convertPosition(msg.position),
+      team: 2,
+      miniTexture: whiteTexture
+    });
+};
+var removeCharacter = function (id) {
+  console.log('remove character',id)
+  if (pieces[id]) {
+    minipieceContainer.removeChild(pieces[id].miniSprite);
+    pieceContainer.removeChild(pieces[id].sprite);
+    delete pieces[id];
+  }
+};
 
-        socket.on('players update', function (msg) {
-            console.log('player update',msg);
-            if (msg.action === 'add'){
-                msg.all.forEach( function(player){
-                    if (!pieces[player.id]){
-                        addToChat('new player '+player.id);
-                        pieces[player.id]=(player.id===myId)?createPlayer(player):createPiece({id:player.id,point:player.point,team:player.team,miniTexture:whiteTexture});
-                    }
-                });
-                score1.setText(msg.teamScore[1]);
-                score2.setText(msg.teamScore[2]);
-            } else if (msg.action === 'remove'){
-                if (pieces[msg.target]){
-                    minipieceContainer.removeChild(pieces[msg.target].miniSprite);
-                    pieceContainer.removeChild(pieces[msg.target].sprite);
-                    delete pieces[msg.target];
-                }
-            } else if (msg.action === 'kill update'){
-                if(msg.teamScore){
-                    score1.setText(msg.teamScore[1]);
-                    score2.setText(msg.teamScore[2]);
-                }
-                if(msg.casualties){
-                    addToChat('player '+msg.pk+' killed player'+(msg.casualties.length>1?'s ':' ')+msg.casualties);
-                }
-            }
-        });
-    },
-    start: function() {
-        requestAnimationFrame(animate);
+function start(msg) {
+  console.log('snapshot',msg);
+  createMap(msg.map);
+  Object.keys(msg.characters).forEach(function (key) {
+    var character = msg.characters[key];
+    //  if (character.type === 'tree') {
+    addTree(character)
+    /*  } else {
+     addCharacter(character);
+     }*/
+  });
+  createStage();
+  running = true;
+  requestAnimationFrame(animate);
+};
+
+function update(msg) {
+  if (msg.action ==='walk' ){
+    var p = pieces[msg.character];
+    if (p) {
+      p.moveToPoint(convertPosition(msg.position));
     }
+  } else if (msg.result ==='damaged'){
+    var player = pieces[msg.pieceId];
+    createHit(player);
+  } else if (msg.result === 'spawn') {
+    addToChat('new player '+msg.character);
+    addCharacter(msg);
+  } else if (msg.result === 'shoot') {
+    pieces[msg.id] = createShot(msg);
+  } else if (msg.result === 'die') {
+    removeCharacter(msg.character);
+  } else {
+    console.log('unhandled update',msg);
+  }
+}
+
+module.exports = {
+  stop: function () {
+    running = false;
+    for (var i = stage.children.length - 1; i >= 0; i--) {	stage.removeChild(stage.children[i]);};
+    Object.keys(pieces).forEach(function (id) {
+      removeCharacter(id);
+    });
+  },
+  start:start,
+  removeCharacter:removeCharacter,
+  update:update,
+  attach :function(id) {
+    myId = id;
+  }
 };
 

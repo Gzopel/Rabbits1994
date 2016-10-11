@@ -11,50 +11,40 @@ var controls = {
     left : false,
     right : false
 };
-var msg_type = 'player action';
+var msg_type = 'action';
 var lastMovement = 0;
 
-var getOrientation = function(){
-    var orientation;
-    if (controls.up ) {
-        if (controls.left){
-            orientation = 315;
-        } else if (controls.right) {
-            orientation = 45;
-        } else {
-            orientation = 0;
-        }
-    } else if (controls.down ) {
-        if (controls.left){
-            orientation = 225;
-        } else if (controls.right) {
-            orientation = 135;
-        } else {
-            orientation = 180;
-        }
-    } else if (controls.left) {
-        orientation = 270;
-    } else if (controls.right) {
-        orientation = 90;
+function getOrientationVector() {
+
+    function normalizeVector(v){
+        const n = Math.sqrt((v.x)*(v.x)  + (v.z)*(v.z));
+        return { x: v.x / n, z: v.z / n };
     }
-    return orientation;
-};
 
+    var orientation = { x:0, z:0};
+    if (controls.up && !controls.down) {
+        orientation.z = 1;
+    } else if (controls.down && !controls.up) {
+        orientation.z = -1;
+    }
+    if (controls.left && !controls.right) {
+        orientation.x = -1;
+    } else if (controls.right && !controls.left) {
+        orientation.x = 1;
+    }
+    return normalizeVector(orientation);
+}
 
-
-//module.exports.attach
-//module.exports.deattach
 var buildMsg = function(){
-    var msg = {
-        action: 'move',
-        movement:{
-            owner:id,
-            orientation:getOrientation()
-        }
-    };
-
-    return msg;
+  return {
+    character: id,
+    //action: 'walk',
+    type: 'walk',
+    orientation: getOrientationVector(),
+  };
 };
+
+
 var movementUpdate = function(){
     if ((ticks-lastMovement) > moveLimit ) {
         lastMovement = ticks;
@@ -103,7 +93,7 @@ actions['J']={
     'down':function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
-            socket.emit(msg_type, {action: 'attack',owner:id});
+            socket.emit(msg_type, {action: 'basicAttack',character:id});
         }
     }
 };
@@ -111,7 +101,7 @@ actions['K']={
     'down':function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
-            socket.emit(msg_type, {action: 'shoot',owner:id,orientation:getOrientation()});
+            socket.emit(msg_type, {type: 'shoot',character:id});
         }
     }
 };
@@ -136,5 +126,13 @@ module.exports.attach = function(clientSocket,ownerId,actions){
     });
 
 };
+
+module.exports.detach = function () {
+  for(key in actions){
+    kd[key].unbindDown(key,actions[key].down);
+    kd[key].unbindUp(key,actions[key].up);
+  }
+  kd.stop();
+}
 
 
