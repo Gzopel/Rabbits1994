@@ -54,7 +54,7 @@ function joinMap() {
         reconnect();
       } else renderer.removeCharacter(msg.character);
     });
-    controller.attach(socket,characterId,controller.actions);
+    controller.attach(socket,characterId);
     socket.emit('join',{ character: characterId, type: type, origin: prevMapId });
   });
 }

@@ -53,7 +53,7 @@ var movementUpdate = function(){
 };
 
 var actions = [];
-actions['W']={
+var moveUpKey = {
     down:function () {
         controls.up=true;
         movementUpdate();
@@ -62,7 +62,7 @@ actions['W']={
         controls.up=false;
     }
 };
-actions['S']={
+var moveDownKey = {
     down:function () {
         controls.down=true;
         movementUpdate();
@@ -71,7 +71,7 @@ actions['S']={
     controls.down=false;
     }
 };
-actions['A']={
+var  moveLeftKey = {
     down:function () {
         controls.left = true;
         movementUpdate();
@@ -80,7 +80,7 @@ actions['A']={
         controls.left=false;
     }
 };
-actions['D']= {
+var moveRightKey = {
     'down': function () {
         controls.right = true;
         movementUpdate();
@@ -97,7 +97,7 @@ actions['J']={
         }
     }
 };
-actions['K']={
+var shootKey = {
     'down':function () {
         if ((ticks-lastAttack) > attackLimit ) {
             lastAttack = ticks;
@@ -105,18 +105,23 @@ actions['K']={
         }
     }
 };
-module.exports.actions =actions;
 
-/*
-* TODO:
-*   - provide support for mouse, touchscreen, joysticks, etc.
-*   - should be disabled when user has to type
-*
-* */
-module.exports.attach = function(clientSocket,ownerId,actions){
+actions['W'] = moveUpKey;
+actions['S'] = moveDownKey;
+actions['A'] = moveLeftKey;
+actions['D'] = moveRightKey;
+actions['UP'] = moveUpKey;
+actions['LEFT'] = moveLeftKey;
+actions['RIGHT'] = moveRightKey;
+actions['DOWN'] = moveDownKey;
+actions['K'] = shootKey;
+actions['ENTER'] = shootKey;
+actions['SPACE'] = shootKey;
+
+module.exports.attach = function(clientSocket,ownerId){
     id=ownerId;
     socket=clientSocket;
-    for(key in actions){
+    for(var key in actions){
         kd[key].down(actions[key].down);
         kd[key].up(actions[key].up);
     }
