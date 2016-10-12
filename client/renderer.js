@@ -325,20 +325,22 @@ function convertPosition(v) {
   }
 }
 
-var myId;
 var pieces = [];
+
+var spawn = function (msg) {
+  pieces[msg.character] = createPlayer(convertPosition(msg.position));
+}
 
 var addCharacter = function (msg) {
   var id = msg.character || msg.id; // spawn vs snapshot
-  pieces[id] = (id === myId) ?
-    createPlayer(convertPosition(msg.position)) :
-    createPiece({
-      id: id,
-      point: convertPosition(msg.position),
-      team: 2,
-      miniTexture: whiteTexture
-    });
+  pieces[id] = createPiece({
+    id: id,
+    point: convertPosition(msg.position),
+    team: 2,
+    miniTexture: whiteTexture
+  });
 };
+
 var removeCharacter = function (id) {
   console.log('remove character',id)
   var piece = pieces[id];
@@ -400,10 +402,8 @@ module.exports = {
     for (var i = stage.children.length - 1; i >= 0; i--) {	stage.removeChild(stage.children[i]);};
   },
   start:start,
+  spawn: spawn,
   removeCharacter:removeCharacter,
   update:update,
-  attach :function(id) {
-    myId = id;
-  }
 };
 

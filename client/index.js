@@ -38,7 +38,9 @@ function joinMap() {
     socket.on('snapshot', renderer.start);
     socket.on('characterUpdate', function (msg) {
       console.log('piece update',msg);
-      if ( msg.result === 'warp' && characterId === msg.character ) {
+      if ( msg.result === 'spawn' && characterId === msg.character ) {
+        renderer.spawn(msg);
+      } else if ( msg.result === 'warp' && characterId === msg.character ) {
         prevMapId = mapId;
         mapId = msg.destination;
         reconnect();
@@ -53,7 +55,6 @@ function joinMap() {
       } else renderer.removeCharacter(msg.character);
     });
     controller.attach(socket,characterId,controller.actions);
-    renderer.attach(characterId);
     socket.emit('join',{ character: characterId, type: type, origin: prevMapId });
   });
 }
