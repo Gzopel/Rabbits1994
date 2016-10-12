@@ -187,10 +187,10 @@ function createStage() {
 
 function addTree(msg) {
   var texture = getTreeTexture();
-  createPiece({
+  pieces[msg.id] = createPiece({
     texture: texture,
     miniTexture: texture,
-    id: msg.character,
+    id: msg.id,
     point: convertPosition(msg.position),
   });
 }
@@ -208,6 +208,7 @@ var createPiece = function(conf){
     ts.position.y=7;
     sprite.addChild(ts);
   }
+  pieceContainer.addChild(sprite);
   var miniSprite;
   if(conf.miniTexture){
     miniSprite = new PIXI.Sprite(conf.texture||bunnyTexture);
@@ -229,13 +230,12 @@ var createPiece = function(conf){
       miniSprite.position.y =(sprite.position.y/10)-1;
     }
   };
-  pieceContainer.addChild(sprite);
 
   if(conf.point){
     move(conf.point);
   }
 
-  console.log('new piece '+conf);
+  console.log('new piece ',conf);
   return {
     sprite:sprite,
     miniSprite:miniSprite,
@@ -284,6 +284,7 @@ var createHit = function(player){
 
 //AKA camera+piece
 var createPlayer = function(position){
+  console.log('creating player');
   var piece= new createPiece({
     texture:bunnyTexture,
     width:26,
@@ -328,10 +329,11 @@ var myId;
 var pieces = [];
 
 var addCharacter = function (msg) {
-  pieces[msg.character] = (msg.character === myId) ?
+  var id = msg.character || msg.id; // spawn vs snapshot
+  pieces[id] = (id === myId) ?
     createPlayer(convertPosition(msg.position)) :
     createPiece({
-      id: msg.character,
+      id: id,
       point: convertPosition(msg.position),
       team: 2,
       miniTexture: whiteTexture
@@ -343,8 +345,12 @@ var removeCharacter = function (id) {
   if (piece) {
     console.log('removing it for reals')
     delete pieces[id];
-    pieceContainer.removeChild(piece.sprite);
-    minipieceContainer.removeChild(piece.miniSprite);
+    if (pieceContainer.children.indexOf(piece.sprite) !== -1) {
+      pieceContainer.removeChild(piece.sprite);
+    }
+    if (minipieceContainer.children.indexOf(piece.miniSprite) !== -1) {
+      minipieceContainer.removeChild(piece.miniSprite);
+    }
   }
 };
 
@@ -388,10 +394,10 @@ function update(msg) {
 module.exports = {
   stop: function () {
     running = false;
-    for (var i = stage.children.length - 1; i >= 0; i--) {	stage.removeChild(stage.children[i]);};
     Object.keys(pieces).forEach(function (id) {
       removeCharacter(id);
     });
+    for (var i = stage.children.length - 1; i >= 0; i--) {	stage.removeChild(stage.children[i]);};
   },
   start:start,
   removeCharacter:removeCharacter,

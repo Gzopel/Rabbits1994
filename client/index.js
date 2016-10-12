@@ -15,7 +15,7 @@ jq(document).on('keypress',function(event){
    event.preventDefault();
 });*/
 var mapId = 1;
-var prevMapId = 0;
+var prevMapId = 2;
 var characterId = uuid.v4();
 function joinMap() {
   jq.ajax({
@@ -29,21 +29,28 @@ function joinMap() {
     var type = 'anonymous';
     console.log('URL',url);
     socket = io(url,options);
-
+    var reconnect = function (){
+      renderer.stop();
+      socket.disconnect();
+      controller.detach();
+      joinMap();
+    };
     socket.on('snapshot', renderer.start);
     socket.on('characterUpdate', function (msg) {
       console.log('piece update',msg);
       if ( msg.result === 'warp' && characterId === msg.character ) {
         prevMapId = mapId;
         mapId = msg.destination;
-        renderer.stop();
-        socket.disconnect();
-        controller.detach();
-        joinMap();
+        reconnect();
       } else renderer.update(msg);
     });
     socket.on('rmCharacter', function(msg) {
-      renderer.removeCharacter(msg.character);
+      if(characterId === msg.character) {
+        var swap = mapId;
+        mapId = prevMapId;
+        prevMapId = swap;
+        reconnect();
+      } else renderer.removeCharacter(msg.character);
     });
     controller.attach(socket,characterId,controller.actions);
     renderer.attach(characterId);
