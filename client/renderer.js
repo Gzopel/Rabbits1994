@@ -74,24 +74,24 @@ chatContainer.position.y=h-40;
 var lastPosition=0;
 var chatHistory = [];
 var addToChat = function(msg){
-    var text = new PIXI.Text(msg,{font:'16px Arial'});
-    text.setText(msg);
-    text.position.y=lastPosition+text.height;
-    chatContainer.addChild(text);
-    chatHistory.push(text);
-    lastPosition+=text.height;
-    if (lastPosition>chatBackground.height){
-        var old = chatHistory[0];
-        chatHistory.splice(0,1);
-        chatHistory.forEach(function(c){
-            c.position.y-=old.height;
-        });
-        lastPosition-=old.height;
-        chatContainer.position.y+=old.height;
-        chatContainer.removeChild(old);
-        delete old;
-    }
-    chatContainer.position.y-=text.height;//autoscroll
+  var text = new PIXI.Text(msg,{font:'16px Arial'});
+  text.setText(msg);
+  text.position.y=lastPosition+text.height;
+  chatContainer.addChild(text);
+  chatHistory.push(text);
+  lastPosition+=text.height;
+  if (lastPosition>chatBackground.height){
+    var old = chatHistory[0];
+    chatHistory.splice(0,1);
+    chatHistory.forEach(function(c){
+        c.position.y-=old.height;
+    });
+    lastPosition-=old.height;
+    chatContainer.position.y+=old.height;
+    chatContainer.removeChild(old);
+    delete old;
+  }
+  chatContainer.position.y-=text.height;//autoscroll
 };
 
 function getTreeTexture() {
@@ -160,10 +160,10 @@ function createMap(mapConfig) {
 }
 
 var mapPointToPosition = function(point){
-    return {
-        x:point.x,
-        y: mapMax.y -point.y//inverted axis
-    }
+  return {
+    x:point.x,
+    y: mapMax.y -point.y//inverted axis
+  }
 };
 
 var animate;
@@ -196,132 +196,132 @@ function addTree(msg) {
 }
 
 var createPiece = function(conf){
-    var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
-    sprite.width=conf.width||26;
-    sprite.height=conf.height||37;
-    if(conf.team){
-        var tt = (conf.team===2)?blueTexture:redTexture;
-        var ts = new PIXI.Sprite(tt);
-        ts.height=3;
-        ts.width=14;
-        ts.position.x=6;
-        ts.position.y=7;
-        sprite.addChild(ts);
-    }
-    var miniSprite;
-    if(conf.miniTexture){
-        miniSprite = new PIXI.Sprite(conf.texture||bunnyTexture);
-        miniSprite.height=6;
-        miniSprite.width=6;
-        minipieceContainer.addChild(miniSprite);
-    }
+  var sprite= new PIXI.Sprite(conf.texture||bunnyTexture);
+  sprite.width=conf.width||26;
+  sprite.height=conf.height||37;
+  if(conf.team){
+    var tt = (conf.team===2)?blueTexture:redTexture;
+    var ts = new PIXI.Sprite(tt);
+    ts.height=3;
+    ts.width=14;
+    ts.position.x=6;
+    ts.position.y=7;
+    sprite.addChild(ts);
+  }
+  var miniSprite;
+  if(conf.miniTexture){
+    miniSprite = new PIXI.Sprite(conf.texture||bunnyTexture);
+    miniSprite.height=6;
+    miniSprite.width=6;
+    minipieceContainer.addChild(miniSprite);
+  }
 
-    var spriteCenter = {
-        x:sprite.width/2,
-        y: sprite.height*0.7
-    };
-    var move = function(target){
-        var dm = mapPointToPosition(target);
-        sprite.position.x = dm.x-spriteCenter.x;
-        sprite.position.y = dm.y-spriteCenter.y;
-        if(miniSprite){
-            miniSprite.position.x =(sprite.position.x/10)-1;
-            miniSprite.position.y =(sprite.position.y/10)-1;
-        }
-    };
-    pieceContainer.addChild(sprite);
-
-    if(conf.point){
-        move(conf.point);
+  var spriteCenter = {
+    x:sprite.width/2,
+    y: sprite.height*0.7
+  };
+  var move = function(target){
+    var dm = mapPointToPosition(target);
+    sprite.position.x = dm.x-spriteCenter.x;
+    sprite.position.y = dm.y-spriteCenter.y;
+    if(miniSprite){
+      miniSprite.position.x =(sprite.position.x/10)-1;
+      miniSprite.position.y =(sprite.position.y/10)-1;
     }
+  };
+  pieceContainer.addChild(sprite);
 
-    console.log('new piece '+conf);
-    return {
-        sprite:sprite,
-        miniSprite:miniSprite,
-        moveToPoint:move,
-        getCenter: function(){
-            return {
-                x:sprite.position.x+spriteCenter.x,
-                y: sprite.position.y+spriteCenter.y
-            }
-        },
-        distanceTo: function(position){
-            return {
-                x:sprite.position.x+spriteCenter.x-position.x,
-                y: sprite.position.y+spriteCenter.y-position.y
-            }
-        }
+  if(conf.point){
+    move(conf.point);
+  }
+
+  console.log('new piece '+conf);
+  return {
+    sprite:sprite,
+    miniSprite:miniSprite,
+    moveToPoint:move,
+    getCenter: function(){
+      return {
+        x:sprite.position.x+spriteCenter.x,
+        y: sprite.position.y+spriteCenter.y
+      }
+    },
+    distanceTo: function(position){
+      return {
+        x:sprite.position.x+spriteCenter.x-position.x,
+        y: sprite.position.y+spriteCenter.y-position.y
+      }
     }
+  }
 
 };
 
 var createShot = function(shot){
-    var piece= new createPiece({
-        texture:hitTexture,
-        width:10,
-        height:10,
-        point: convertPosition(shot.position)
-    });
-    return piece;
+  var piece= new createPiece({
+    texture:hitTexture,
+    width:10,
+    height:10,
+    point: convertPosition(shot.position)
+  });
+  return piece;
 };
 
 
 var createHit = function(player){
-    var hit =  new PIXI.Sprite(hitTexture);
-    hit.scale.x=2;
-    hit.scale.y=2;
-    var center = player.getCenter();
-    hit.position.x=center.x;
-    hit.position.y=center.y-10;
-    pieceContainer.addChild(hit);
-    setTimeout(function(){
-        hit.visible=false;
-        pieceContainer.removeChild(hit);
-        delete hit;
-    },250);
+  var hit =  new PIXI.Sprite(hitTexture);
+  hit.scale.x=2;
+  hit.scale.y=2;
+  var center = player.getCenter();
+  hit.position.x=center.x;
+  hit.position.y=center.y-10;
+  pieceContainer.addChild(hit);
+  setTimeout(function(){
+    hit.visible=false;
+    pieceContainer.removeChild(hit);
+    delete hit;
+  },250);
 };
 
 //AKA camera+piece
 var createPlayer = function(position){
-    var piece= new createPiece({
-        texture:bunnyTexture,
-        width:26,
-        height:37,
-        point:position,
-        team:1,
-        miniTexture:redTexture
-    });
+  var piece= new createPiece({
+    texture:bunnyTexture,
+    width:26,
+    height:37,
+    point:position,
+    team:1,
+    miniTexture:redTexture
+  });
 
-    var movePiece = piece.moveToPoint;
-    piece.moveToPoint = function(point){
+  var movePiece = piece.moveToPoint;
+  piece.moveToPoint = function(point){
 
-        piece.sprite.position.x = point.x-(piece.sprite.width/2);
-        piece.sprite.position.y = (mapMax.y-point.y)-(piece.sprite.height*0.7);
+    piece.sprite.position.x = point.x-(piece.sprite.width/2);
+    piece.sprite.position.y = (mapMax.y-point.y)-(piece.sprite.height*0.7);
 
-        piece.miniSprite.position.x = piece.sprite.position.x/10;
-        piece.miniSprite.position.y = piece.sprite.position.y/10;
+    piece.miniSprite.position.x = piece.sprite.position.x/10;
+    piece.miniSprite.position.y = piece.sprite.position.y/10;
 
-        mapRef.x=point.x-(w/2);
-        mapRef.y=point.y-(h/2);
-        mapContainer.position.x= -mapRef.x;
-        mapContainer.position.y= h-(mapMax.y-mapRef.y);
-        pieceContainer.position.x= -mapRef.x;
-        pieceContainer.position.y= h-(mapMax.y-mapRef.y);
+    mapRef.x=point.x-(w/2);
+    mapRef.y=point.y-(h/2);
+    mapContainer.position.x= -mapRef.x;
+    mapContainer.position.y= h-(mapMax.y-mapRef.y);
+    pieceContainer.position.x= -mapRef.x;
+    pieceContainer.position.y= h-(mapMax.y-mapRef.y);
 
-     //   movePiece(point);
-    };
+ //   movePiece(point);
+  };
 
-    piece.moveToPoint(position);
+  piece.moveToPoint(position);
 
-    return piece;
+  return piece;
 };
 
 function convertPosition(v) {
-    return {
-        x:v.x,
-        y:v.z
-    }
+  return {
+    x:v.x,
+    y:v.z
+  }
 }
 
 var myId;
@@ -339,10 +339,12 @@ var addCharacter = function (msg) {
 };
 var removeCharacter = function (id) {
   console.log('remove character',id)
-  if (pieces[id]) {
-    minipieceContainer.removeChild(pieces[id].miniSprite);
-    pieceContainer.removeChild(pieces[id].sprite);
+  var piece = pieces[id];
+  if (piece) {
+    console.log('removing it for reals')
     delete pieces[id];
+    pieceContainer.removeChild(piece.sprite);
+    minipieceContainer.removeChild(piece.miniSprite);
   }
 };
 
@@ -351,11 +353,11 @@ function start(msg) {
   createMap(msg.map);
   Object.keys(msg.characters).forEach(function (key) {
     var character = msg.characters[key];
-    //  if (character.type === 'tree') {
-    addTree(character)
-    /*  } else {
-     addCharacter(character);
-     }*/
+    if (character.type === 'tree') {
+      addTree(character)
+    } else {
+      addCharacter(character);
+    }
   });
   createStage();
   running = true;
@@ -369,7 +371,7 @@ function update(msg) {
       p.moveToPoint(convertPosition(msg.position));
     }
   } else if (msg.result ==='damaged'){
-    var player = pieces[msg.pieceId];
+    var player = pieces[msg.character];
     createHit(player);
   } else if (msg.result === 'spawn') {
     addToChat('new player '+msg.character);
