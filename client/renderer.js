@@ -190,6 +190,7 @@ function addTree(msg) {
   pieces[msg.id] = createPiece({
     texture: texture,
     miniTexture: texture,
+    height: 55,
     id: msg.id,
     point: convertPosition(msg.position),
   });
