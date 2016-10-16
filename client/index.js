@@ -38,7 +38,7 @@ function joinMap() {
     socket.on('snapshot', renderer.start);
     socket.on('characterUpdate', function (msg) {
       console.log('piece update',msg);
-      if(msg.result === 'damaged' && msg.remainingHealth === 0 && characterId === msg.character) {
+      if(msg.result === 'damaged' && msg.remainingHealth <= 0 && characterId === msg.character) {
         var swap = mapId;
         mapId = prevMapId;
         prevMapId = swap;
