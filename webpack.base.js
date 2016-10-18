@@ -17,11 +17,21 @@ module.exports = {
   },
 
   module: {
-    loaders: [{
-      test: /\.jsx?$/,
-      exclude: /node_modules/,
-      loaders: ['babel-loader'],
-    }],
+    loaders: [
+      {
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        loaders: ['babel-loader'],
+      }, {
+        test: /\.js$/,
+        loaders: ['transform?brfs'],
+        include: /node_modules/
+      },
+      {
+        test: /\.json$/,
+        loaders: ['json']
+      }
+    ],
   },
 
   plugins: [],
