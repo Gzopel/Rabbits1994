@@ -31,17 +31,15 @@ const getOrientationVector = () => {
 }
 
 const actions = [];
-const buildKeyController = (key) => {
-  return {
-    down() {
-      controls[key]=true;
-      dispatch && dispatch(getOrientationVector());
-    },
-    up() {
-      controls[key]=false;
-    }
+const buildKeyController = (key) => ({
+  down() {
+    controls[key]=true;
+    dispatch && dispatch(getOrientationVector());
+  },
+  up() {
+    controls[key]=false;
   }
-};
+});
 
 // const shootKey = {
 //   'down':function () {

@@ -7,7 +7,7 @@ const PIXI = require('pixi.js');
 
 const Sprite = ReactPIXI.Sprite;
 
-class MovingCharacter extends React.Component {
+class CharacterComponent extends React.Component {
   constructor() {
     super();
     this.displayName = 'Character';
@@ -22,11 +22,15 @@ class MovingCharacter extends React.Component {
   }
 
   render() {
-    return <Sprite image={'./resources/bunny.png'}  x={this.props.position.x} y={this.props.maxY - this.props.position.y} anchor={new PIXI.Point(0.5,0.5)} key='character' />
+    return <Sprite image={'./resources/bunny.png'}
+                   x={this.props.position.x}
+                   y={this.props.maxY - this.props.position.y}
+                   anchor={new PIXI.Point(0.5,0.5)}
+                   key='character' />
   }
 };
 
-MovingCharacter.propTypes = {
+CharacterComponent.propTypes = {
   dispatch: React.PropTypes.func.isRequired,
   position: React.PropTypes.shape({
     x: React.PropTypes.number,
@@ -46,6 +50,6 @@ const mapDispatchToProps = dispatch => ({
 const Character = connect(
   mapStateToProps,
   mapDispatchToProps
-)(MovingCharacter);
+)(CharacterComponent);
 
 export default Character;

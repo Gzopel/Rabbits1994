@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { join } from '../actions/Game';
 import LoadingScreen from './LoadingScreen';
 import Game from './Game';
 import * as BrowserActions from '../actions/Browser';
@@ -16,6 +17,7 @@ class GameLoaderComponent extends React.Component {
   }
 
   componentDidMount() {
+    this.props.dispatch(join());
     this.timeout = setTimeout(() => {
       this.didLoad = true;
       this.forceUpdate();// fake server load

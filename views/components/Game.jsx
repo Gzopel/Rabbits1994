@@ -1,6 +1,7 @@
 import React from 'react';
 import Map from './Map';
 import Character from './Character';
+
 const ReactPIXI = require('react-pixi');
 const PIXI = require('pixi.js');
 
@@ -8,8 +9,12 @@ const Stage = React.createFactory(ReactPIXI.Stage);
 const MapFactory = React.createFactory(Map);
 const CharacterFactory = React.createFactory(Character);
 
-const Game = React.createClass({
-  displayName: 'Game',
+class GameComponent  extends React.Component {
+  constructor() {
+    super();
+    this.displayName= 'Game';
+  }
+  
   render() {
     return Stage(
         this.props.size,
@@ -17,6 +22,12 @@ const Game = React.createClass({
         CharacterFactory()
       );
   }
-})
+};
+GameComponent.propTypes = {
+  size: React.PropTypes.shape({
+    x: React.PropTypes.number,
+    y: React.PropTypes.number,
+  }),
+};
 
-export default Game;
+export default GameComponent;
