@@ -19,11 +19,4 @@ const Game = React.createClass({
   }
 })
 
-//Game.propTypes = {
-//  size: React.PropTypes.shape({
-//    width: React.PropTypes.number,
-//    height: React.PropTypes.number,
-//  }),
-//};
-
 export default Game;

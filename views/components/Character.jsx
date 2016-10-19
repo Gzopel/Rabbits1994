@@ -1,21 +1,14 @@
 import React from 'react';
-import Map from './Map';
 const ReactPIXI = require('react-pixi');
 const PIXI = require('pixi.js');
 
-const Sprite = React.createFactory(ReactPIXI.Sprite);
+const Sprite = ReactPIXI.Sprite;
 
-class Game extends React.Component {
+const Character = React.createClass({
+  displayName: 'Character',
   render() {
-    return <Sprite image={'./resources/bunny.png'}  x={this.props.position.x} y={this.props.position.y} />
+    return <Sprite image={'./resources/bunny.png'}  x={this.props.position.x} y={this.props.position.y} anchor={new PIXI.Point(0.5,0.5)} key='character' />
   }
-}
+});
 
-Game.propTypes = {
-  position: React.PropTypes.shape({
-    x: React.PropTypes.number,
-    y: React.PropTypes.number,
-  }),
-};
-
-export default Game;
+export default Character;
