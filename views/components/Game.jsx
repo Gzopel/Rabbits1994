@@ -12,9 +12,9 @@ const Game = React.createClass({
   displayName: 'Game',
   render() {
     return Stage(
-        { width: this.props.size.width, height: this.props.size.height},
+        this.props.size,
         MapFactory({ size: this.props.size}),
-        CharacterFactory({ position: { x: 400, y: 400}})
+        CharacterFactory()
       );
   }
 })
