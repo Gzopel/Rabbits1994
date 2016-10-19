@@ -1,16 +1,27 @@
-var React = require('react');
-var ReactPIXI = require('react-pixi');
-var PIXI = require('pixi.js');
+import React from 'react';
+import LoadingScreen from './LoadingScreen';
+import Game from './Game';
 
-var Stage = ReactPIXI.Stage;
-var Text = ReactPIXI.Text;
 
 class GameLoader extends React.Component {
+  constructor() {
+    super();
+    this.didLoad = false;
+  }
+
+  componentDidMount() {
+    this.timeout = setTimeout(() => {
+      this.didLoad = true;
+      this.forceUpdate();// fake server load
+      clearTimeout(this.timeout);
+    }, 2000);
+  }
+
   render() {
-    const fontstyle = {font:'40px Times'};
-    return <Stage width={800} height={800}>
-      <Text text='Loading' x={400} y={400} style={fontstyle} anchor={new PIXI.Point(0.5,0)} key='2' />
-    </Stage>;
+    if (!this.didLoad) {
+      return <LoadingScreen size={ { width: 800, height: 800 } }/>
+    }
+    return <Game size={ { width: 800, height: 800 } }/>
   }
 }
 
