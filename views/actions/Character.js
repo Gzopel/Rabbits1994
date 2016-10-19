@@ -1,4 +1,5 @@
 import ACTIONS from '../actions';
+import { cameraMove } from './Camera';
 import { nextPositionByOrientation } from '../helpers/Movement';
 
 export const characterMoveSuccess = (characterNextPosition) => ({
@@ -18,6 +19,7 @@ export const characterMove = orientation => (dispatch, getState) => {
   );
   
   dispatch(characterMoveSuccess(characterNextPosition));
+  dispatch(cameraMove(characterNextPosition));
 };
 
 export default characterMove;

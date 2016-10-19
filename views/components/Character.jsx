@@ -22,10 +22,10 @@ class CharacterComponent extends React.Component {
   }
 
   render() {
-    return <Sprite image={'./resources/bunny.png'}
-                   x={this.props.position.x}
-                   y={this.props.maxY - this.props.position.y}
-                   anchor={new PIXI.Point(0.5,0.5)}
+    return <Sprite image={ './resources/bunny.png' }
+                   x={ this.props.position.x }
+                   y={ this.props.position.y }
+                   anchor={ new PIXI.Point(0.5,0.5) }
                    key='character' />
   }
 };
@@ -39,7 +39,7 @@ CharacterComponent.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  position: state.Character.position,
+  // position: state.Character.position,
   maxY: state.Browser.size.height,
 });
 

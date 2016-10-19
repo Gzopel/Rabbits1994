@@ -1,4 +1,7 @@
 const ACTIONS = {
+  CAMERA: {
+    MOVE: 'MOVE'
+  },
   CHARACTER: {
     WALK: 'WALK',
   },

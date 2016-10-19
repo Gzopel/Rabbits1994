@@ -16,17 +16,18 @@ class GameComponent  extends React.Component {
   }
   
   render() {
+    console.log("Size",this.props.size);
     return Stage(
         this.props.size,
         MapFactory({ size: this.props.size}),
-        CharacterFactory()
+        CharacterFactory({ position: { x: this.props.size.width / 2, y: this.props.size.height / 2}})
       );
   }
 };
 GameComponent.propTypes = {
   size: React.PropTypes.shape({
-    x: React.PropTypes.number,
-    y: React.PropTypes.number,
+    width: React.PropTypes.number,
+    height: React.PropTypes.number,
   }),
 };
 

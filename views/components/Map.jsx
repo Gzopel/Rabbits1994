@@ -10,20 +10,23 @@ class MapComponent extends React.Component {
     return <TilingSprite image={'./resources/grass.jpg'}
                          tileScale={new PIXI.Point(.25,.25)}
                          width={this.props.size.x}
-                         height={this.props.size.y} />
+                         height={this.props.size.y}
+                         x={-this.props.cameraPosition.x}
+                         y={this.props.cameraPosition.y} />
   }
 }
 
 MapComponent.propTypes = {
   size: React.PropTypes.shape({
-    width: React.PropTypes.number,
-    height: React.PropTypes.number,
+    x: React.PropTypes.number,
+    y: React.PropTypes.number,
   }),
 };
 
 
 const mapStateToProps = state => ({
   size: state.Map.size,
+  cameraPosition: state.Camera.position,
 });
 
 const Map = connect(mapStateToProps)(MapComponent);
